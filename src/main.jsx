@@ -20,6 +20,7 @@ import Dashboard from "./admin/Dashboard/Dashboard.jsx";
 import ManageCars from "./admin/ManageCars/ManageCars.jsx";
 import Settings from "./admin/Settings/Settings.jsx";
 import Logout from "./admin/Logout/Logout.jsx";
+import MyListing from "./components/MyListing.jsx";
 // import ManageUsers from "./admin/ManageUsers/ManageUsers.jsx";
 
 const router = createBrowserRouter([
@@ -71,10 +72,10 @@ const router = createBrowserRouter([
     path: "/admin/logout",
     element: <Logout/>
   },
-  // {
-  //   path: "/admin/users",
-  //   element: <ManageUsers />,
-  // }
+  {
+    path: "/mylistings",
+    element:<MyListing/>,
+  }
 ]);
 
 createRoot(document.getElementById("root")).render(

@@ -135,7 +135,7 @@ export default function ChatBody({ chat_id, chat_with }) {
     connectSocket();
     const getChat = async () => {
       const res = await fetch(
-        `http://localhost:3000/api/chats/messages?chat_id=${chat_id}`
+        `http://localhost:4000/api/chats/messages?chat_id=${chat_id}`
       );
       return await res.json();
     };

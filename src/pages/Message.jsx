@@ -33,7 +33,7 @@ export default function Message() {
       }
       try {
         const res = await axios.get(
-          `http://localhost:3000/api/chats?user_id=${user_id}`,
+          `http://localhost:4000/api/chats?user_id=${user_id}`,
           { withCredentials: true }
         );
         const chatData = res.data;

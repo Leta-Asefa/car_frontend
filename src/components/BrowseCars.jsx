@@ -31,17 +31,6 @@ export default function () {
   return (
     <div>
       <Category setFilterType={setFilterType} filterType={filterType} />
-      <CarGrid
-        listings={filteredCars}
-        itemsPerPage={6}
-        onViewDetails={handleViewDetails}
-      />
-      {selectedCar && (
-        <CarDetails
-          listing={selectedCar}
-          onClose={() => setSelectedListing(null)}
-        />
-      )}
     </div>
   );
 }

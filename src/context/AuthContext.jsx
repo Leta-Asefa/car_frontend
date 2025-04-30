@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/auth/login",
+        "http://localhost:4000/api/auth/login",
         {
           email,
           password,
@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    const res = await axios.get("http://localhost:3000/api/auth/logout", {
+    const res = await axios.get("http://localhost:4000/api/auth/logout", {
       withCredentials: true,
     });
 
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
   const register = async (email, password, name, role) => {
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/auth/register",
+        "http://localhost:4000/api/auth/register",
         {
           email,
           password,

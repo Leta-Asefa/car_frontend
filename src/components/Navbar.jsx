@@ -52,9 +52,14 @@ const Navbar = ({ children }) => {
 
         {/* Navigation Links */}
         <nav className="hidden md:flex gap-6 text-gray-700 items-center">
+       
+        {user?.role === "admin" && (
+           
           <Link to={"/admin/dashboard"} className=" text-gray-700 hover:text-blue-600">
             Admin
           </Link>
+        )}
+
           <Link to={"/"} className=" text-gray-700 hover:text-blue-600">
             Home
           </Link>
@@ -83,7 +88,7 @@ const Navbar = ({ children }) => {
           <div className="hidden sm:ml-6 sm:flex sm:space-x-4">
             {user?.role === "seller" && (
               <Link
-                to={"/my-listings"}
+                to={"/mylistings"}
                 className="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300"
               >
                 My Listings
@@ -192,7 +197,7 @@ const Navbar = ({ children }) => {
             <div className="sm:ml-6 flex flex-col space-y-4">
               {user?.role === "seller" && (
                 <Link
-                  to={"/my-listings"}
+                  to={"/mylistings"}
                   className="text-gray-700 hover:text-blue-600"
                 >
                   My Listings

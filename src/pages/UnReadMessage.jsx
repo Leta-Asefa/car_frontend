@@ -12,7 +12,7 @@ export default function UnReadMessages({ chat_id }) {
     const getUnreads = async () => {
       try {
         const res = await fetch(
-          `http://localhost:3000/api/chats/unread?chat_id=${chat_id}&user_id=${user.id}`
+          `http://localhost:4000/api/chats/unread?chat_id=${chat_id}&user_id=${user.id}`
         );
         if (!res.ok) throw new Error("Failed to fetch unread count");
         const data = await res.json();
