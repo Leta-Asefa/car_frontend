@@ -154,6 +154,7 @@ const CarManager = ({ userId }) => {
             key !== "_id" &&
             key !== "createdAt" &&
             key !== "updatedAt" &&
+            key !== "user" &&
             key !== "__v" && (
               <div key={key}>
                 <label className="block text-gray-700 font-semibold capitalize">{key}</label>

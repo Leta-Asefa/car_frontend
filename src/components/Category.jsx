@@ -59,7 +59,7 @@ const Category = ({ setFilterType, filterType }) => {
 
       {/* Categories */}
       <div className="flex flex-wrap flex-row justify-center items-center gap-5  ">
-        {["SUV", "Sedan", "Hatchback", "Electric", "Convertible"].map((category, index) => (
+        {["SUV", "Sedan", "Hatchback", "Electric", "Convertible","aaa",'bbb'].map((category, index) => (
           <div
             key={index}
             className="border p-4 bg-white text-black rounded-xl p-1 flex flex-wrap justify-center items-center gap-2 hover:shadow-md hover:bg-slate-100 cursor-pointer"

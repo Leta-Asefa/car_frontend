@@ -1,21 +1,41 @@
-import React, { createContext, useContext } from "react";
-import socket, { connectSocket, disconnectSocket } from "../socket";
+import { createContext, useState, useEffect, useContext } from "react";
+import { useAuth } from "./AuthContext";
+import io from "socket.io-client";
 
 const SocketContext = createContext();
 
-export const SocketProvider = ({ children }) => {
-  return (
-    <SocketContext.Provider value={{ socket, connectSocket, disconnectSocket }}>
-      {children}
-    </SocketContext.Provider>
-  );
+export const useSocketContext = () => {
+	return useContext(SocketContext);
 };
 
-// Custom hook to access the socket
-export const useSocket = () => {
-  const context = useContext(SocketContext);
-  if (!context) {
-    throw new Error("useSocket must be used within a SocketProvider");
-  }
-  return context;
+export const SocketContextProvider = ({ children }) => {
+	const [socket, setSocket] = useState(null);
+	const [onlineUsers, setOnlineUsers] = useState([]);
+	const { user } = useAuth();
+
+	useEffect(() => {
+		if (user) {
+			const socket = io("http://localhost:4000", {
+				query: {
+					userId: user._id,
+				},
+			});
+
+			setSocket(socket);
+
+			// socket.on() is used to listen to the events. can be used both on client and server side
+			socket.on("getOnlineUsers", (users) => {
+				setOnlineUsers(users);
+			});
+
+			return () => socket.close();
+		} else {
+			if (socket) {
+				socket.close();
+				setSocket(null);
+			}
+		}
+	}, [user]);
+
+	return <SocketContext.Provider value={{ socket, onlineUsers }}>{children}</SocketContext.Provider>;
 };

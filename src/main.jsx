@@ -14,13 +14,13 @@ import Contact from "./pages/Contact.jsx";
 import Faq from "./pages/Faq.jsx";
 import CarListing from "./components/CarListing.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
-import Message from "./pages/Message.jsx";
-import { SocketProvider } from "./context/SocketContext.jsx";
 import Dashboard from "./admin/Dashboard/Dashboard.jsx";
 import ManageCars from "./admin/ManageCars/ManageCars.jsx";
 import Settings from "./admin/Settings/Settings.jsx";
 import Logout from "./admin/Logout/Logout.jsx";
 import MyListing from "./components/MyListing.jsx";
+import { SocketContextProvider } from "./context/SocketContext.jsx";
+import Message from "./components/Message.jsx";
 // import ManageUsers from "./admin/ManageUsers/ManageUsers.jsx";
 
 const router = createBrowserRouter([
@@ -81,9 +81,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
-      <SocketProvider>
+      <SocketContextProvider>
         <RouterProvider router={router} />
-      </SocketProvider>
+      </SocketContextProvider>
     </AuthProvider>
   </StrictMode>
 );
