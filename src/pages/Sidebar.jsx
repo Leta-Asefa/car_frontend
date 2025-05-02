@@ -13,9 +13,7 @@ const Sidebar = () => {
     { name: "Dashboard", path: "/admin/dashboard", icon: <FaTachometerAlt /> },
     { name: "Manage Cars", path: "/admin/cars", icon: <FaCar /> },
     { name: "Manage Users", path: "/admin/users", icon: <FaUsers /> },
-    { name: "Messages", path: "/admin/messages", icon: <FaEnvelope /> },
     { name: "Reports", path: "/admin/reports", icon: <FaChartBar /> },
-    { name: "Settings", path: "/admin/settings", icon: <FaCogs /> },
     { name: "Logout", path: "/logout", icon: <FiLogOut /> },
   ];
 
