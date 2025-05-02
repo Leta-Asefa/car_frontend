@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
 import { FaCar, FaMapMarkerAlt, FaMoneyBillWave, FaCommentDots } from "react-icons/fa";
+import { Car } from "lucide-react";
 
 const Category = ({ setFilterType, filterType }) => {
   const [filteredCars, setFilteredCars] = useState([]);
@@ -13,7 +14,44 @@ const Category = ({ setFilterType, filterType }) => {
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (isModalOpen && selectedCar?.user?._id) {
+        try {
+          const res = await axios.get(`http://localhost:4000/api/car/recommendations/${user._id}`);
+          console.log("Recommendations: ", res.data);
+          setRecommendations(res.data);
+        } catch (err) {
+          console.error("Error fetching recommendations:", err);
+          setRecommendations([]);
+        }
+      }
+    };
+
+    fetchRecommendations();
+  }, [isModalOpen, selectedCar]);
+
+
+  useEffect(() => {
+    const fetchSearchHistory = async () => {
+      if (user && user._id) {
+        try {
+          const response = await axios.get(`http://localhost:4000/api/auth/${user._id}/search_history`);
+          console.log("Search History: ", response.data);
+          setSearchHistory(response.data);
+        } catch (error) {
+          console.error("Error fetching search history:", error);
+        }
+      }
+    };
+
+    fetchSearchHistory();
+  }, [user]);
+
 
   const priceRanges = {
     "Under 20000": { min: 0, max: 20000 },
@@ -22,17 +60,17 @@ const Category = ({ setFilterType, filterType }) => {
     "40000+": { min: 40000, max: 100000000 },
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     const fetchCars = async () => {
-    try {
-      const response = await axios.get("http://localhost:4000/api/car/lastestcars");
-      setFilteredCars(response.data);
-    } catch (error) {
-      console.error("Error fetching filtered cars:", error);
-    }
-  };
-  fetchCars()
-  },[])
+      try {
+        const response = await axios.get("http://localhost:4000/api/car/lastestcars");
+        setFilteredCars(response.data);
+      } catch (error) {
+        console.error("Error fetching filtered cars:", error);
+      }
+    };
+    fetchCars()
+  }, [])
 
 
   const handleApplyFilters = async () => {
@@ -51,14 +89,28 @@ const Category = ({ setFilterType, filterType }) => {
     }
   };
 
-  const handleCarClick = (car) => {
+  const handleCarClick = async (car) => {
     setSelectedCar(car);
     setIsModalOpen(true);
+    console.log(car);
+    if (user && user._id) {
+      try {
+        await axios.post(`http://localhost:4000/api/auth/${user._id}/search_history`, {
+          brand: car.brand,
+          model: car.model,
+          location: car.location,
+          year: car.year,
+          ownerId: car.user._id,
+          carId: car._id,
+          date: new Date()
+        });
+      } catch (error) {
+        console.error("Failed to save search history:", error);
+      }
+    }
   };
 
-  const handleMessageClick = (ownerId) => {
-    console.log("Owner ID:", ownerId);
-  };
+
 
   return (
     <div
@@ -72,12 +124,35 @@ const Category = ({ setFilterType, filterType }) => {
         Browse Cars By Type
       </h2>
 
+      {user && searchHistory.length > 0 && (
+        <div className="bg-white p-2 rounded-xl shadow-lg my-4  mx-auto">
+          <h2 className="text-xl font-bold mb-2 text-gray-800 text-center">Your Search History</h2>
+
+          <div className="flex flex-wrap gap-2 justify-center">
+            {searchHistory.map((entry, index) => (
+              <div
+                key={index}
+                className="bg-gray-200 hover:bg-gray-300 rounded-full px-3 py-1 text-gray-800 text-sm shadow hover:shadow-md transition whitespace-nowrap"
+                onClick={() => {
+                  setSelectedCar(entry.carId);
+                  setIsModalOpen(true);
+                }}
+              >
+                {entry.brand} {entry.model}
+              </div>
+            ))}
+          </div>
+
+        </div>
+      )}
+      v
+
       {/* Categories */}
       <div className="flex flex-wrap flex-row justify-center items-center gap-5  ">
         {["SUV", "Sedan", "Hatchback", "Electric", "Convertible", "aaa", 'bbb'].map((category, index) => (
           <div
             key={index}
-            className="border p-4 bg-white text-black rounded-xl p-1 flex flex-wrap justify-center items-center gap-2 hover:shadow-md hover:bg-slate-100 cursor-pointer"
+            className="border p-4 bg-white text-black rounded-xl  flex flex-wrap justify-center items-center gap-2 hover:shadow-md hover:bg-slate-100 cursor-pointer"
             onClick={() => {
               setFilterType(category);
               setSelectedMake("");
@@ -150,6 +225,9 @@ const Category = ({ setFilterType, filterType }) => {
             >
               Apply Filters
             </button>
+
+
+
           </div>
         </div>
       </div>
@@ -157,65 +235,66 @@ const Category = ({ setFilterType, filterType }) => {
 
 
 
+
       {/* Filter Results */}
       <div className="bg-gray-900 py-10 px-10 rounded-xl">
-      <h2 className="text-3xl font-bold text-white mb-8 text-center">Available Cars</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-        {filteredCars.map((car) => (
-          <div
-            key={car._id}
-            onClick={() => handleCarClick(car)}
-            className="bg-white rounded-2xl shadow-md hover:shadow-2xl transform hover:scale-[1.02] transition duration-300 cursor-pointer relative group"
-          >
-            {car.images?.[0] && (
-              <img
-                src={car.images[0]}
-                alt={car.name}
-                className="w-full h-48 object-cover rounded-t-2xl"
-              />
-            )}
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800 truncate">{car.name}</h3>
+        <h2 className="text-3xl font-bold text-white mb-8 text-center">Available Cars</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+          {filteredCars.map((car) => (
+            <div
+              key={car._id}
+              onClick={() => handleCarClick(car)}
+              className="bg-white rounded-2xl shadow-md hover:shadow-2xl transform hover:scale-[1.02] transition duration-300 cursor-pointer relative group"
+            >
+              {car.images?.[0] && (
+                <img
+                  src={car.images[0]}
+                  alt={car.name}
+                  className="w-full h-48 object-cover rounded-t-2xl"
+                />
+              )}
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-gray-800 truncate">{car.name}</h3>
 
-              <div className="text-gray-600 text-sm mt-2 space-y-1">
-                <p className="flex items-center gap-2">
-                  <FaCar className="text-blue-500" /> {car.brand}
-                </p>
-                <p className="flex items-center gap-2">
-                  <FaMoneyBillWave className="text-green-500" /> ${car.price}
-                </p>
-                <p className="flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-red-500" /> {car.location}
-                </p>
-              </div>
+                <div className="text-gray-600 text-sm mt-2 space-y-1">
+                  <p className="flex items-center gap-2">
+                    <FaCar className="text-blue-500" /> {car.brand}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <FaMoneyBillWave className="text-green-500" /> ${car.price}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-red-500" /> {car.location}
+                  </p>
+                </div>
 
-              <button
-                className="mt-4 w-full bg-blue-100 text-blue-600 font-medium py-2 rounded-full flex items-center justify-center gap-2 hover:bg-blue-200 transition"
-                onClick={async (e) => {
-                  e.stopPropagation(); // prevent triggering handleCarClick
-                  if (!user) {
-                    alert("Please login to send a message");
-                  } else {
-                    try {
-                      await axios.get(
-                        `http://localhost:4000/api/chat/create_conversations/${user._id}/${car.user._id}`
-                      );
-                      navigate(`/messages/${car.user._id}`);
-                    } catch (error) {
-                      console.error("Failed to start chat:", error);
-                      alert("Could not create chat.");
+                <button
+                  className="mt-4 w-full bg-blue-100 text-blue-600 font-medium py-2 rounded-full flex items-center justify-center gap-2 hover:bg-blue-200 transition"
+                  onClick={async (e) => {
+                    e.stopPropagation(); // prevent triggering handleCarClick
+                    if (!user) {
+                      alert("Please login to send a message");
+                    } else {
+                      try {
+                        await axios.get(
+                          `http://localhost:4000/api/chat/create_conversations/${user._id}/${car.user._id}`
+                        );
+                        navigate(`/messages/${car.user._id}`);
+                      } catch (error) {
+                        console.error("Failed to start chat:", error);
+                        alert("Could not create chat.");
+                      }
                     }
-                  }
-                }}
-              >
-                <FaCommentDots />
-                Message Owner
-              </button>
+                  }}
+                >
+                  <FaCommentDots />
+                  Message Owner
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
 
       {/* Car Details Modal */}
       {isModalOpen && selectedCar && (
@@ -286,29 +365,29 @@ const Category = ({ setFilterType, filterType }) => {
                     </h4>
                     <div className="flex justify-center gap-2 mt-4 flex-wrap">
                       {["Chat With The Seller"].map((platform) => (
-                          <button
-                            key={platform}
-                            className="border border-indigo-600 text-indigo-600 px-4 py-2 rounded hover:bg-indigo-50"
-                            onClick={async ()=>{
-                              if(!user)
-                                alert("Please login to send a message")
-                              else{
+                        <button
+                          key={platform}
+                          className="border border-indigo-600 text-indigo-600 px-4 py-2 rounded hover:bg-indigo-50"
+                          onClick={async () => {
+                            if (!user)
+                              alert("Please login to send a message")
+                            else {
 
-                                console.log("IDS ", user._id, selectedCar.user._id);
+                              console.log("IDS ", user._id, selectedCar);
 
-                                const res = await axios.get(
-                                  `http://localhost:4000/api/chat/create_conversations/${user._id}/${selectedCar.user._id}`
+                              const res = await axios.get(
+                                `http://localhost:4000/api/chat/create_conversations/${user._id}/${selectedCar.user._id || selectedCar.user}`
                               );
-                             
-                              navigate(`/messages/${selectedCar.user._id}`);
- 
 
-                              }
+                              navigate(`/messages/${selectedCar.user._id || selectedCar.user}`);
 
-                            }}
-                          >
-                            {platform}
-                          </button>
+
+                            }
+
+                          }}
+                        >
+                          {platform}
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -345,8 +424,34 @@ const Category = ({ setFilterType, filterType }) => {
                   </div>
                 </div>
               </div>
+          {recommendations.length > 0 && (
+            <div className="mt-10">
+              <h3 className="text-xl font-semibold mb-4">You Might Also Like</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {recommendations.map((car) => (
+                  <div
+                    key={car._id}
+                    className="border rounded-lg p-3 shadow hover:shadow-md cursor-pointer transition"
+                    onClick={() => {
+                      setSelectedCar(car);
+                      setSelectedImageIndex(0); // Reset image index
+                    }}
+                  >
+                    <img
+                      src={car.images?.[0]}
+                      alt={car.name}
+                      className="w-full h-40 object-cover rounded mb-2"
+                    />
+                    <h4 className="text-lg font-bold">{car.brand} {car.model}</h4>
+                    <p className="text-gray-600">${car.price}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
             </div>
           </div>
+
         </div>
       )}
 
