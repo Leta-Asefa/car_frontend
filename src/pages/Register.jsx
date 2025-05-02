@@ -15,6 +15,7 @@ const Register = () => {
     email: '',
     phone: '',
     password: '',
+    
   });
 
   // State for validation errors

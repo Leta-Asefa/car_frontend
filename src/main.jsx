@@ -21,6 +21,7 @@ import Logout from "./admin/Logout/Logout.jsx";
 import MyListing from "./components/MyListing.jsx";
 import { SocketContextProvider } from "./context/SocketContext.jsx";
 import Message from "./components/Message.jsx";
+import ManageUsers from "./admin/ManageUsers/ManageUsers.jsx";
 // import ManageUsers from "./admin/ManageUsers/ManageUsers.jsx";
 
 const router = createBrowserRouter([
@@ -53,7 +54,7 @@ const router = createBrowserRouter([
     element: <CarListing />,
   },
   {
-    path: "/messages",
+    path: "/messages/:receiverId",
     element: <Message />,
   },
   {
@@ -75,6 +76,11 @@ const router = createBrowserRouter([
   {
     path: "/mylistings",
     element:<MyListing/>,
+  }
+  ,
+  {
+    path: "/admin/users",
+    element:<ManageUsers/>,
   }
 ]);
 

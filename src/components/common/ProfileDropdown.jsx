@@ -27,16 +27,9 @@ export default function ProfileDropdown({ onLoginClick, onRegisterClick }) {
       >
         {user ? (
           <>
-            <img
-              src={
-                user.avatar ||
-                "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=150"
-              }
-              alt={user.user_name}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <span className="hidden md:inline text-sm text-gray-700">
-              {user.user_name}
+         
+            <span className="hidden md:inline text-xs text-gray-700 bg-gray-300 rounded-lg p-1">
+              {user.username}
             </span>
           </>
         ) : (
@@ -86,7 +79,7 @@ export default function ProfileDropdown({ onLoginClick, onRegisterClick }) {
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                Register
+                Register 
               </button>
             </>
           )}

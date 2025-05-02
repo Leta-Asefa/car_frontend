@@ -17,9 +17,9 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+alert("Registering user", email, password, name, role, phoneNumber);
     try {
-      const status = await register(email, password, name, role);
+      const status = await register(email, password, name, role,phoneNumber);
       if (status) {
         onClose();
         console.log("status ", status);
