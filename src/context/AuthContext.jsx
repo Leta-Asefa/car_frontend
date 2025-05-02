@@ -50,7 +50,6 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (email, password, name, role,phoneNumber) => {
-    console.log("Registering user", email, password, name, role,phoneNumber);
     try {
       const res = await axios.post(
         "http://localhost:4000/api/auth/register",

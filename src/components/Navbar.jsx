@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Car, MessageSquare } from "lucide-react";
 import LoginModal from "./auth/LoginModal";
@@ -11,7 +11,7 @@ import axios from "axios";
 const Navbar = ({ children }) => {
   const [nav, setNav] = useState(false);
   const { user } = useAuth();
-
+  const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [query, setQuery] = useState("");
@@ -126,7 +126,7 @@ const Navbar = ({ children }) => {
               </Link>
             )}
             {user && (
-              <Link to={"/messages"} className="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300">
+              <Link to={"/messages/null"} className="text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300">
                 <div className="flex items-center space-x-4">
                   <button className="text-gray-600 hover:text-gray-900 flex items-center gap-2">
                     <MessageSquare className="h-3 w-3" />
@@ -187,7 +187,7 @@ const Navbar = ({ children }) => {
             )}
             {user && (
               <>
-                <Link to={"/messages"} className="text-gray-700 hover:text-blue-600">Messages</Link>
+                <Link to={"/messages/null"} className="text-gray-700 hover:text-blue-600">Messages</Link>
                 <Link to={"/carListing"} className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 text-center font-bold">
                   Sell Your Car Easily
                 </Link>
