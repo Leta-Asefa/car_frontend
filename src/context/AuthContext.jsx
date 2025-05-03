@@ -26,7 +26,17 @@ export function AuthProvider({ children }) {
       );
 
       console.log("Login succewss", res);
-      if (res.data._id) {
+
+      if (res?.data?.status === 'unapproved') {
+        alert("Your account is not approved yet")
+        return false
+      }
+      if (res?.data?.status === 'declined') {
+        alert("Your account is declined by the admin")
+        return false
+      }
+
+      if (res?.data?._id) {
         setUser(res.data)
         return true
       }
@@ -49,7 +59,7 @@ export function AuthProvider({ children }) {
 
   };
 
-  const register = async (email, password, name, role,phoneNumber) => {
+  const register = async (email, password, name, role, phoneNumber) => {
     try {
       const res = await axios.post(
         "http://localhost:4000/api/auth/register",
@@ -62,7 +72,18 @@ export function AuthProvider({ children }) {
         },
         { withCredentials: true }
       );
-      if (res.data._id) {
+console.log("response from register", res);
+
+      if (res?.data?.status === 'unapproved') {
+        alert("Your account is not approved yet")
+        return false
+      }
+      if (res?.data?.status === 'declined') {
+        alert("Your account is declined by the admin")
+        return false
+      }
+
+      if (res?.data?._id) {
         setUser(res.data)
         return true
       }
