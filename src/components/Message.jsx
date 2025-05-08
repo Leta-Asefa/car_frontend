@@ -172,7 +172,15 @@ const Message = () => {
                             : "bg-gray-200 text-gray-900 rounded-bl-none"
                           }`}
                       >
-                        <p className="whitespace-pre-wrap">{msg.message}</p>
+                        {msg.isImage ? (
+                          <img
+                            src={msg.message}
+                            alt="Sent Image"
+                            className="rounded-lg max-w-full h-auto"
+                          />
+                        ) : (
+                          <p className="whitespace-pre-wrap">{msg.message}</p>
+                        )}
                         <span className="absolute bottom-[-1.1rem] right-2 text-xs text-gray-400">
                           {new Date(msg.createdAt).toLocaleTimeString([], {
                             hour: "2-digit",
