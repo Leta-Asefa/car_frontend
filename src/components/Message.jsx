@@ -35,31 +35,34 @@ const Message = () => {
 
   useEffect(() => {
     if (selected?.messages.length === 0)
-      alert(`Here your seller ! His/Her name is " ` + selected.participants.find((p) => p._id === receiverId).username+' "')
+      alert(`Here your seller! His/Her name is " ` + selected.participants.find((p) => p._id === receiverId).username+' "')
 
   }, [selected])
 
   useEffect(() => {
     const handleNewMessage = (newMessage) => {
-      // Check if message is for the currently selected conversation
+      // Check if the new message belongs to the currently selected conversation
       const isInCurrentConversation =
         selected &&
-        selected.participants.some(
-          (p) => p._id === newMessage.senderId || p._id === newMessage.receiverId
-        );
+        selected._id === newMessage.conversation._id;
 
       if (isInCurrentConversation) {
-        setSelected((prev) => ({
-          ...prev,
-          messages: [...prev.messages, newMessage],
-        }));
+        setSelected((prev) => {
+          if (!prev) return prev;
+
+          // Replace the messages with the updated list from the server
+          return {
+            ...prev,
+            messages: newMessage.conversation.messages,
+          };
+        });
       }
 
-      // Optionally update the sidebar preview
+      // Update the sidebar preview
       setConversations((prev) =>
         prev.map((conv) =>
-          conv._id === selected?._id
-            ? { ...conv, messages: [...conv.messages, newMessage] }
+          conv._id === newMessage.conversation._id
+            ? { ...conv, messages: newMessage.conversation.messages }
             : conv
         )
       );
@@ -160,6 +163,7 @@ const Message = () => {
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
                 {selected.messages.map((msg) => {
+                  console.log("Msg", msg);
                   const isMe = msg.senderId === user._id;
                   return (
                     <div
@@ -208,10 +212,19 @@ const Message = () => {
                     );
 
                     const newMessage = res.data;
-                    setSelected((prev) => ({
-                      ...prev,
-                      messages: [...prev.messages, newMessage],
-                    }));
+                    setSelected((prev) => {
+                      if (!prev) return prev;
+
+                      // Ensure the new message is added to the current conversation
+                      if (prev._id === newMessage.conversation._id) {
+                        return {
+                          ...prev,
+                          messages: [...prev.messages, newMessage],
+                        };
+                      }
+
+                      return prev;
+                    });
                     setMessageText("");
                   } catch (err) {
                     console.error("Message send failed:", err);
