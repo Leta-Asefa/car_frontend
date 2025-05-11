@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import Modal from "../common/Modal";
@@ -8,9 +8,14 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showModal, setShowModal] = useState(isOpen);
   const navigate = useNavigate();
 
   const { login } = useAuth();
+
+  useEffect(() => {
+    setShowModal(isOpen);
+  }, [isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +33,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={showModal} onClose={onClose}>
       <div className="bg-white px-8 py-6 rounded-lg max-w-md w-full">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Login</h2>

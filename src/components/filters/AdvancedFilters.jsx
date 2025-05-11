@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
 
 const filterSections = {
@@ -48,6 +48,9 @@ const filterSections = {
 
 export default function AdvancedFilters({ isOpen, onClose, onApplyFilters }) {
   const [selectedFilters, setSelectedFilters] = useState({});
+  useEffect(()=>{
+console.log("Selected Filters",selectedFilters)
+  },[selectedFilters])
 
   const handleFilterChange = (section, value) => {
     setSelectedFilters(prev => ({

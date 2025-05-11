@@ -67,7 +67,8 @@ export default function ProfileDropdown({ onLoginClick, onRegisterClick }) {
                   setIsOpen(false);
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-              >
+            id="navbar-login-button"
+            >
                 <LogIn className="w-4 h-4 mr-2" />
                 Login
               </button>

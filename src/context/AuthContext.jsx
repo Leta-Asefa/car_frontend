@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
     return token ? jwtDecode(token) : null;
   });
 
+  const [searchResults,setSearchResults]=useState([])
 
 
   const login = async (email, password) => {
@@ -95,7 +96,7 @@ console.log("response from register", res);
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, register }}>
+    <AuthContext.Provider value={{ user, setUser, login, logout, register,searchResults,setSearchResults }}>
       {children}
     </AuthContext.Provider>
   );
