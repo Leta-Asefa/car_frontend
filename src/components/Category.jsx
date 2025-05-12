@@ -39,6 +39,8 @@ const Category = ({ setFilterType, filterType }) => {
     features: [],
     safety: []
   });
+  const [isInitialRender, setIsInitialRender] = useState(true);
+
 
   const totalPages = Math.ceil(searchResults.length / itemsPerPage);
 
@@ -136,6 +138,11 @@ const Category = ({ setFilterType, filterType }) => {
 
   const handleApplyFilters = async () => {
     console.log("Applied Filters:", filters);
+
+    if (isInitialRender) {
+      setIsInitialRender(false);
+      return;
+    }
 
     try {
       const response = await axios.post("http://localhost:4000/api/car/filter", filters);
