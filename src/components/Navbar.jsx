@@ -28,6 +28,10 @@ const Navbar = ({ children }) => {
     setShowLoginModal(false);
   };
 
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const getLatestCars = async () => {
     try {
       const response = await axios.get("http://localhost:4000/api/car/latestcars");
@@ -68,7 +72,7 @@ const Navbar = ({ children }) => {
         {/* Logo */}
         <div className="flex gap-2 text-2xl font-bold text-blue-600">
           <Car className="h-8 w-8 text-blue-700" />
-          <Link to={"/"}>CarHub</Link>
+          <Link to="/" onClick={handleScrollToTop}>CarHub</Link>
         </div>
 
         {/* Search Bar */}

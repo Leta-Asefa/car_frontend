@@ -10,17 +10,19 @@ import { FaCarBattery } from "react-icons/fa6";
 import { PiVan } from "react-icons/pi";
 import { GiOldWagon } from "react-icons/gi";
 import AdvancedFilters from "./filters/AdvancedFilters";
+import Modal from "./common/Modal"; // Ensure Modal is imported
 
 const Category = ({ setFilterType, filterType }) => {
   const [selectedCar, setSelectedCar] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user,searchResults,setSearchResults } = useAuth()
+  const { user, searchResults, setSearchResults } = useAuth()
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [searchHistory, setSearchHistory] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [otherPosts, setOtherPosts] = useState([]);
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -70,6 +72,22 @@ const Category = ({ setFilterType, filterType }) => {
     fetchRecommendations();
   }, [isModalOpen, selectedCar]);
 
+  useEffect(() => {
+    const fetchOtherPosts = async () => {
+      if (isModalOpen && selectedCar?.user?._id) {
+        try {
+          const res = await axios.get(`http://localhost:4000/api/car/get_other_posts/${selectedCar.user._id}`);
+          console.log("Other Posts: ", res.data);
+          setOtherPosts(res.data);
+        } catch (err) {
+          console.error("Error fetching other posts:", err);
+          setOtherPosts([]);
+        }
+      }
+    };
+
+    fetchOtherPosts();
+  }, [isModalOpen, selectedCar]);
 
   useEffect(() => {
     const fetchSearchHistory = async () => {
@@ -122,12 +140,34 @@ const Category = ({ setFilterType, filterType }) => {
     try {
       const response = await axios.post("http://localhost:4000/api/car/filter", filters);
       setSearchResults(response.data);
+
+      // Reset to the first page when filters are applied
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching filtered cars:", error);
     }
+
+    const availableCarsSection = document.getElementById("available-cars");
+    if (availableCarsSection) {
+      availableCarsSection.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
-  const handleCarClick = async (car) => {
+  useEffect(() => {
+    if (filters.bodyType || filters.bodyType==='') {
+      handleApplyFilters(); // Trigger fetching cars when the bodyType filter changes
+    }
+  }, [filters.bodyType]);
+
+  const handleCategoryClick = (category) => {
+    handleFilterChange(category.filterKey, category.type === 'Any' ? '' : category.type);
+    setSelectedMake("");
+    setSelectedModel("");
+    setSelectedPrice("");
+  };
+
+  const handleCarCardClick = async (car, event) => {
+    event.preventDefault(); // Prevent default behavior
     setSelectedCar(car);
     setIsModalOpen(true);
     console.log(car);
@@ -157,6 +197,24 @@ const Category = ({ setFilterType, filterType }) => {
     }));
 
     handleApplyFilters(); // Apply the combined filters
+  };
+
+  const handleRecommendationClick = (car) => {
+    setSelectedCar(car);
+    setSelectedImageIndex(0); // Reset image index
+    const modalElement = document.querySelector('.modal-content');
+    if (modalElement) {
+      modalElement.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll modal to the top
+    }
+  };
+
+  const handleOtherPostClick = (car) => {
+    setIsModalOpen(false); // Close the current modal
+    setTimeout(() => {
+      setSelectedCar(car); // Set the new car
+      setSelectedImageIndex(0); // Reset image index
+      setIsModalOpen(true); // Reopen the modal with the new car
+    }, 300); // Delay to ensure smooth transition
   };
 
   return (
@@ -192,38 +250,32 @@ const Category = ({ setFilterType, filterType }) => {
 
         </div>
       )}
-      
+
 
       {/* Categories */}
       <div className="flex flex-wrap flex-row justify-center items-center gap-5">
-          {[
-            { type: "Any", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "SUV", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "Sedan", icon: <CarFront className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "Hatchback", icon: <CarTaxiFrontIcon className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "Convertible", icon: <CarIcon className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "Coupe", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "Crossover", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "Pickup", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "Truck", icon: <Truck className="text-black h-6 w-6" />, filterKey: "bodyType" },
-            { type: "Van", icon: <PiVan className="text-black h-6 w-6" />, filterKey: "bodyType" },
-          ].map((category, index) => (
-            <div
-              key={index}
-              className={`border p-4 bg-white text-black rounded-xl flex flex-wrap justify-center items-center gap-2 hover:shadow-md hover:bg-slate-100 cursor-pointer ${filters.bodyType === category.type ? 'bg-indigo-100' : ''}`}
-              onClick={() => {
-                handleFilterChange(category.filterKey, category.type==='Any'?'':category.type);
-                setSelectedMake("");
-                setSelectedModel("");
-                setSelectedPrice("");
-                // handleApplyFilters();
-              }}
-            >
-              {category.icon}
-              <h2 className="font-semibold">{category.type}</h2>
-            </div>
-          ))}
-        </div>
+        {[
+          { type: "Any", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "SUV", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "Sedan", icon: <CarFront className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "Hatchback", icon: <CarTaxiFrontIcon className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "Convertible", icon: <CarIcon className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "Coupe", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "Crossover", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "Pickup", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "Truck", icon: <Truck className="text-black h-6 w-6" />, filterKey: "bodyType" },
+          { type: "Van", icon: <PiVan className="text-black h-6 w-6" />, filterKey: "bodyType" },
+        ].map((category, index) => (
+          <div
+            key={index}
+            className={`border p-2 bg-white text-black rounded-xl flex flex-wrap justify-center items-center gap-2 hover:shadow-md hover:bg-slate-100 cursor-pointer ${filters.bodyType === category.type ? 'bg-indigo-100' : ''}`}
+            onClick={() => handleCategoryClick(category)}
+          >
+            {category.icon}
+            <h2 className="font-semibold">{category.type}</h2>
+          </div>
+        ))}
+      </div>
 
 
 
@@ -238,8 +290,12 @@ const Category = ({ setFilterType, filterType }) => {
               onChange={(e) => handleFilterChange("brand", e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
-              <option value="">Any Make</option>
-              {["Toyota", "BMW", "Mercedes", "Audi"].map((make) => (
+              <option value="">Any Brand</option>
+              {[
+                'Audi', 'BMW', 'Chevrolet', 'Ford', 'Honda', 'Hyundai', 'Jaguar', 'Jeep',
+                'Kia', 'Land Rover', 'Lexus', 'Mazda', 'Mercedes', 'Nissan', 'Porsche',
+                'Subaru', 'Tesla', 'Toyota', 'Volkswagen', 'Volvo'
+              ].map((make) => (
                 <option key={make} value={make}>{make}</option>
               ))}
             </select>
@@ -252,7 +308,11 @@ const Category = ({ setFilterType, filterType }) => {
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
               <option value="">Any Model</option>
-              {["Corolla", "X5", "C-Class", "Q7"].map((model) => (
+              {[
+                'A4', 'A6', 'Accord', 'Altima', 'Camry', 'C-Class', 'Civic', 'Corolla',
+                'Cruze', 'CX-5', 'E-Class', 'Elantra', 'F-150', 'Golf', 'Malibu', 'Mustang',
+                'Passat', 'Sentra', 'Sportage', 'Tucson', 'X3', 'X5'
+              ].map((model) => (
                 <option key={model} value={model}>{model}</option>
               ))}
             </select>
@@ -279,25 +339,25 @@ const Category = ({ setFilterType, filterType }) => {
             >
               Search
             </button>
+          </div>
+
+          <div className="">
+            <button
+              onClick={() => setIsAdvancedFiltersOpen(true)}
+              className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-700"
+            >
+              <SlidersHorizontal className="h-10 w-10 border border-gray-200 rounded-lg p-2" />
+            </button>
+          </div>
+          <AdvancedFilters
+            isOpen={isAdvancedFiltersOpen}
+            onClose={() => setIsAdvancedFiltersOpen(false)}
+            onApplyFilters={handleApplyAdvancedFilters}
+          />
+
         </div>
 
-        <div className="">
-          <button
-            onClick={() => setIsAdvancedFiltersOpen(true)}
-            className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-700"
-          >
-            <SlidersHorizontal className="h-10 w-10 border border-gray-200 rounded-lg p-2" />
-          </button>
-        </div>
-        <AdvancedFilters
-          isOpen={isAdvancedFiltersOpen}
-          onClose={() => setIsAdvancedFiltersOpen(false)}
-          onApplyFilters={handleApplyAdvancedFilters}
-        />
 
-        </div>
-
-        
       </div>
 
 
@@ -305,100 +365,100 @@ const Category = ({ setFilterType, filterType }) => {
 
 
       {/* Filter Results */}
-      <div className="bg-gray-100 py-10 lg:px-32 px-12  rounded-xl">
-          <h2 className="text-3xl font-bold text-black mb-8 text-center">Available Cars</h2>
-          {searchResults.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-md">
+      <div id="available-cars"  className="bg-gray-100 py-10 lg:px-32 px-12  rounded-xl">
+        <h2 className="text-3xl font-bold text-black mb-8 text-center">Available Cars</h2>
+        {searchResults.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-md">
             <HiOutlineSearchCircle className="h-20 w-20 text-gray-300 mb-4" />
             <p className="text-gray-600 text-lg font-medium">No cars found</p>
             <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or search terms.</p>
           </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-10">
-                {paginatedCars.map((car) => (
-                  <div
-                    key={car._id}
-                    className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 cursor-pointer group relative"
-                    onClick={() => handleCarClick(car)}
-                  >
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+              {paginatedCars.map((car) => (
+                <div
+                  key={car._id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 cursor-pointer group relative"
+                  onClick={(e) => handleCarCardClick(car, e)}
+                >
 
 
-                    <img
-                      src={car.images?.[0]}
-                      alt={`${car.brand} ${car.model}`}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        {car.year} {car.brand} {car.model}
+                  <img
+                    src={car.images?.[0]}
+                    alt={`${car.brand} ${car.model}`}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {car.year} {car.brand} {car.model}
+                    </h3>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center text-gray-500 text-sm overflow-hidden">
+                        <MapPin className="flex-shrink-0 h-4 w-4 mr-2" />
+                        <h1 className="text-ellipsis overflow-hidden whitespace-nowrap">
+                          {car.location}
+                        </h1>
+                      </div>
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {car.year}
+                      </div>
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <Gauge className="h-4 w-4 mr-2" />
+                        {car.mileage.toLocaleString()} miles
+                      </div>
+                      <hr className="my-8 border-t border-dotted border-gray-400" />
+                    </div>
+                    <div className="mt-4 flex justify-between items-center gap-4">
+                      <span className="text-2xl font-bold text-indigo-600">
+                        {car.price.toLocaleString()} ETB
+                      </span>
+                      <h3
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering handleCarClick
+                          handleCarCardClick(car, e);
+                        }}
+                        className="text-md bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-md flex items-center gap-1"
+                      >
+                        View Details
+                        <MdOpenInNew />
                       </h3>
-                      <div className="mt-2 space-y-2">
-                        <div className="flex items-center text-gray-500 text-sm overflow-hidden">
-                          <MapPin className="flex-shrink-0 h-4 w-4 mr-2" />
-                          <h1 className="text-ellipsis overflow-hidden whitespace-nowrap">
-                            {car.location}
-                          </h1>
-                        </div>
-                        <div className="flex items-center text-gray-500 text-sm">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {car.year}
-                        </div>
-                        <div className="flex items-center text-gray-500 text-sm">
-                          <Gauge className="h-4 w-4 mr-2" />
-                          {car.mileage.toLocaleString()} miles
-                        </div>
-                        <hr className="my-8 border-t border-dotted border-gray-400" />
-                      </div>
-                      <div className="mt-4 flex justify-between items-center gap-4">
-                        <span className="text-2xl font-bold text-indigo-600">
-                          {car.price.toLocaleString()} ETB
-                        </span>
-                        <h3
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent triggering handleCarClick
-                            handleCarClick(car);
-                          }}
-                          className="text-md bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-md flex items-center gap-1"
-                        >
-                          View Details
-                          <MdOpenInNew />
-                        </h3>
-                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-              {searchResults.length !==0  && (
-                <div className="flex justify-center items-center space-x-4 mt-6">
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-1" />
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-600">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </button>
                 </div>
-              )}
-            </>
-          )}
-        </div>
+              ))}
+            </div>
+            {searchResults.length !== 0 && (
+              <div className="flex justify-center items-center space-x-4 mt-6">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </button>
+                <span className="text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Car Details Modal */}
       {isModalOpen && selectedCar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" >
           <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start">
@@ -530,7 +590,6 @@ const Category = ({ setFilterType, filterType }) => {
                             <button
                               onClick={() => {
                                 setShowLoginModal(false);
-                               
                               }}
                               className="text-gray-400 hover:text-red-700"
                             >
@@ -538,9 +597,9 @@ const Category = ({ setFilterType, filterType }) => {
                             </button>
                           </div>
                           <p className="text-gray-600 mb-4">
-                          You can not send messages while your are logged out.
+                            You can not send messages while your are logged out.
                           </p>
-                        
+
                         </div>
                       </div>
                     )}
@@ -646,8 +705,8 @@ const Category = ({ setFilterType, filterType }) => {
                     </div>
                   </div>
 
-                 
-                
+
+
 
 
                 </div>
@@ -663,10 +722,7 @@ const Category = ({ setFilterType, filterType }) => {
                       <div
                         key={car._id}
                         className="border rounded-lg p-3 shadow hover:shadow-md cursor-pointer transition"
-                        onClick={() => {
-                          setSelectedCar(car);
-                          setSelectedImageIndex(0); // Reset image index
-                        }}
+                        onClick={() => handleRecommendationClick(car)}
                       >
                         <img
                           src={car.images?.[0]}
@@ -680,6 +736,30 @@ const Category = ({ setFilterType, filterType }) => {
                   </div>
                 </div>
               )}
+
+              {otherPosts.length > 0 && (
+                <div className="mt-10">
+                  <h3 className="text-xl font-semibold mb-4">Seller's Other Posts</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {otherPosts.map((car) => (
+                      <div
+                        key={car._id}
+                        className="border rounded-lg p-3 shadow hover:shadow-md cursor-pointer transition"
+                        onClick={() => handleOtherPostClick(car)}
+                      >
+                        <img
+                          src={car.images?.[0]}
+                          alt={car.name}
+                          className="w-full h-40 object-cover rounded mb-2"
+                        />
+                        <h4 className="text-lg font-bold">{car.brand} {car.model}</h4>
+                        <p className="text-gray-600">${car.price}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>

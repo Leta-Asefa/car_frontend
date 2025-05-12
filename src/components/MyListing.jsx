@@ -81,12 +81,47 @@ const CarManager = () => {
     setFormData(editableCar);
     setSelectedImages(car.images || []);
     setIsModalOpen(true);
+    setTimeout(() => {
+      const modalContent = document.querySelector(".modal-content");
+      if (modalContent) modalContent.scrollTop = 0;
+    }, 0);
+  };
+
+  const handleImageSelection = (index, file) => {
+    setSelectedImages((prevImages) => {
+      const updatedImages = [...prevImages];
+      updatedImages[index] = file;
+      return updatedImages;
+    });
   };
 
   const handleUpdate = async () => {
     try {
       setIsLoading(true);
-      const updatedCar = { ...formData, images: selectedImages };
+
+      const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dpavrc7wd/image/upload";
+      const CLOUDINARY_UPLOAD_PRESET = "ml_default";
+
+      const uploadedImageUrls = await Promise.all(
+        selectedImages.map(async (image) => {
+          if (image && typeof image !== "string") {
+            const formData = new FormData();
+            formData.append("file", image);
+            formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+            const response = await axios.post(CLOUDINARY_URL, formData, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            });
+
+            return response.data.secure_url;
+          }
+          return image; // Keep existing URLs as is
+        })
+      );
+
+      const updatedCar = { ...formData, images: uploadedImageUrls };
       await axios.put(`http://localhost:4000/api/car/${selectedCar._id}`, updatedCar);
       alert("Car updated successfully!");
       setCars((prevCars) =>
@@ -112,15 +147,6 @@ const CarManager = () => {
       console.error("Error deleting car:", error);
       alert("Error deleting car!");
     }
-  };
-
-  const handleImageSelection = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 6) {
-      alert("You can upload a maximum of 6 images.");
-      return;
-    }
-    setSelectedImages(files);
   };
 
   const handleChange = (e) => {
@@ -188,18 +214,26 @@ const CarManager = () => {
                       </div>
                       <hr className="my-8 border-t border-dotted border-gray-400" />
                     </div>
-                    <div className="mt-4 flex justify-between items-center gap-4">
-                      <span className="text-2xl font-bold text-indigo-600">
-                        {car.price.toLocaleString()} ETB
-                      </span>
+                    <div className="mt-4 flex justify-between items-center gap-1">
+                      <button
+                        className="flex items-center bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering handleEdit
+                          handleDelete(car._id);
+                        }}
+                      >
+                        <AiOutlineDelete className="mr-2" />
+                        Delete
+                      </button>
+                     
                       <h3
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent triggering handleEdit
                           handleEdit(car);
                         }}
-                        className="text-md bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-md flex items-center gap-1"
+                        className=" bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-md flex items-center gap-1"
                       >
-                        View Details
+                        View 
                         <MdOpenInNew />
                       </h3>
                     </div>
@@ -226,13 +260,33 @@ const CarManager = () => {
                   <div key={key}>
                     <label className="block text-gray-700 font-semibold capitalize">{key}</label>
                     {key === "images" ? (
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageSelection}
-                        className="w-full p-2 border border-gray-300 rounded"
-                      />
+                      <div className="grid grid-cols-3 gap-4">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                          <div key={index} className="relative">
+                            {selectedImages[index] ? (
+                              <img
+                                src={
+                                  typeof selectedImages[index] === "string"
+                                    ? selectedImages[index]
+                                    : URL.createObjectURL(selectedImages[index])
+                                }
+                                alt={`Selected ${index + 1}`}
+                                className="w-full h-32 object-cover rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded-lg">
+                                <span className="text-gray-500">Placeholder</span>
+                              </div>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageSelection(index, e.target.files[0])}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     ) : dropdownData[key] ? (
                       key === "features" || key === "safety" ? (
                         <div className="mt-2 space-y-2">
@@ -289,6 +343,7 @@ const CarManager = () => {
                 )
               ))}
             </div>
+           
             <div className="flex justify-end mt-6">
               <button
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"

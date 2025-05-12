@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.modal-content {
+  max-height: 80vh; /* Ensure the modal content is scrollable */
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding: 1rem; /* Add padding for better readability */
+}
+
+.modal-description {
+  max-width: 40ch; /* Limit the width of the description to 40 characters */
+  word-wrap: break-word; /* Ensure long words break properly */
+}

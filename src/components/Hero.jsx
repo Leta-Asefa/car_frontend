@@ -3,6 +3,14 @@ import tesla from "../assets/tesla.png";
 import { Link } from "react-router-dom";
 import AdvancedFilters from "./filters/AdvancedFilters";
 import SearchFilters from "./SearchFilters";
+
+const handleScrollToAvailableCars = () => {
+  const availableCarsSection = document.getElementById("available-cars");
+  if (availableCarsSection) {
+    availableCarsSection.scrollIntoView({ behavior: "smooth" });
+  }
+};
+
 const Hero = () => {
   return (
     <section className="relative bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 text-white overflow-hidden pt-10">
@@ -18,7 +26,10 @@ const Hero = () => {
             advanced tools designed for your convenience.
           </p>
           <div className="flex justify-center lg:justify-start space-x-4">
-            <button className=" text-white px-6 py-3 bg-blue-600 rounded-lg font-semibold shadow-md hover:bg-blue-700 hover:scale-105 transition-transform duration-300">
+            <button
+              onClick={handleScrollToAvailableCars}
+              className=" text-white px-6 py-3 bg-blue-600 rounded-lg font-semibold shadow-md hover:bg-blue-700 hover:scale-105 transition-transform duration-300"
+            >
               Get Started
             </button>
             <Link
