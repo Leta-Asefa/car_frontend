@@ -465,8 +465,14 @@ const Category = ({ setFilterType, filterType }) => {
 
       {/* Car Details Modal */}
       {isModalOpen && selectedCar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" >
-          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 transition-all duration-7000 ease-in-out" 
+          style={{ opacity: isModalOpen ? 1 : 0, visibility: isModalOpen ? 'visible' : 'hidden' }}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-7000 ease-in-out"
+            style={{ transform: isModalOpen ? 'translateY(0)' : 'translateY(-20px)', opacity: isModalOpen ? 1 : 0 }}
+          >
             <div className="p-6">
               <div className="flex justify-between items-start">
                 <h2 className="text-2xl font-bold text-gray-900">
