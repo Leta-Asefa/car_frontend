@@ -1,16 +1,67 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import Modal from "./common/Modal";
+import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
+import Navbar from "./Navbar";
+import { HiOutlineSearchCircle } from "react-icons/hi";
+import { MdOpenInNew } from "react-icons/md";
+import { Calendar, Gauge, MapPin } from "lucide-react";
 
-const CarManager = ({ userId }) => {
+const dropdownData = {
+  brand: [
+    "Audi", "BMW", "Chevrolet", "Ford", "Honda", "Hyundai", "Jaguar", "Jeep",
+    "Kia", "Land Rover", "Lexus", "Mazda", "Mercedes", "Nissan", "Porsche",
+    "Subaru", "Tesla", "Toyota", "Volkswagen", "Volvo"
+  ],
+  model: [
+    "A4", "A6", "Accord", "Altima", "Camry", "C-Class", "Civic", "Corolla",
+    "Cruze", "CX-5", "E-Class", "Elantra", "F-150", "Golf", "Malibu", "Mustang",
+    "Passat", "Sentra", "Sportage", "Tucson", "X3", "X5"
+  ],
+  year: Array.from({ length: 30 }, (_, i) => `${2025 - i}`),
+  bodyType: [
+    "Convertible", "Coupe", "Crossover", "Hatchback", "Pickup", "Sedan",
+    "SUV", "Truck", "Van", "Wagon"
+  ],
+  fuel: [
+    "CNG", "Diesel", "Electric", "Hybrid", "LPG", "Petrol"
+  ],
+  transmission: [
+    "Automatic", "CVT", "Dual-Clutch", "Manual", "Semi-Automatic",
+  ],
+  vehicleDetails: ["New", "Used", "Certified Pre-Owned"],
+  features: [
+    "Air Conditioning",
+    "Bluetooth",
+    "Navigation",
+    "Leather Seats",
+    "Sunroof",
+    "Backup Camera",
+    "Heated Seats",
+    "Apple CarPlay",
+    "Android Auto",
+    "Lane Departure Warning",
+  ],
+  safety: [
+    "ABS",
+    "Airbags",
+    "Stability Control",
+    "Blind Spot Monitor",
+    "Forward Collision Warning",
+    "Parking Sensors",
+  ],
+};
+
+const CarManager = () => {
+  const { user } = useAuth();
   const [cars, setCars] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({});
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const {user} = useAuth();
 
-  // Fetch cars for the specified user
   useEffect(() => {
     const fetchCars = async () => {
       try {
@@ -24,23 +75,24 @@ const CarManager = ({ userId }) => {
     fetchCars();
   }, [user]);
 
-  // Open modal and populate form data with selected car's details
   const handleEdit = (car) => {
+    const { status, ...editableCar } = car; // Exclude status from being edited
     setSelectedCar(car);
-    setFormData(car); // Pre-fill form data with the selected car's details
+    setFormData(editableCar);
+    setSelectedImages(car.images || []);
     setIsModalOpen(true);
   };
 
-  // Update car
   const handleUpdate = async () => {
     try {
       setIsLoading(true);
-      await axios.put(`http://localhost:4000/api/car/${selectedCar._id}`, formData);
+      const updatedCar = { ...formData, images: selectedImages };
+      await axios.put(`http://localhost:4000/api/car/${selectedCar._id}`, updatedCar);
       alert("Car updated successfully!");
-      setIsModalOpen(false);
       setCars((prevCars) =>
-        prevCars.map((car) => (car._id === selectedCar._id ? { ...car, ...formData } : car))
+        prevCars.map((car) => (car._id === selectedCar._id ? updatedCar : car))
       );
+      setIsModalOpen(false);
     } catch (error) {
       console.error("Error updating car:", error);
       alert("Error updating car!");
@@ -49,7 +101,6 @@ const CarManager = ({ userId }) => {
     }
   };
 
-  // Delete car
   const handleDelete = async (carId) => {
     if (!window.confirm("Are you sure you want to delete this car?")) return;
 
@@ -63,7 +114,15 @@ const CarManager = ({ userId }) => {
     }
   };
 
-  // Handle input changes in the modal form
+  const handleImageSelection = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 6) {
+      alert("You can upload a maximum of 6 images.");
+      return;
+    }
+    setSelectedImages(files);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -72,120 +131,181 @@ const CarManager = ({ userId }) => {
     }));
   };
 
+  const handleMultiSelect = (field, value) => {
+    setFormData((prev) => {
+      const updatedArray = prev[field]?.includes(value)
+        ? prev[field].filter((item) => item !== value)
+        : [...(prev[field] || []), value];
+      return { ...prev, [field]: updatedArray };
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">Car Manager</h1>
+    <div className="min-h-screen bg-gray-100 p-32">
+      <Navbar/>
+      <h1 className="text-3xl font-bold text-center mb-6">Manage Your Car Posts</h1>
 
-      {/* Car List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cars.map((car) => (
-      <div key={car._id} className="bg-white shadow-lg rounded-lg p-6 flex flex-col">
-      {/* Display the first image */}
-      {car.images && car.images.length > 0 && (
-        <img
-          src={car.images[0]}
-          alt={car.title}
-          className="w-full h-40 object-cover rounded-md mb-4"
-        />
-      )}
-      <h2 className="text-xl font-semibold mb-2 flex items-center">
-        🚗 {car.title}
-      </h2>
-      <p className="text-gray-600 mb-2">{car.description}</p>
-      <p className="text-gray-500 text-sm">
-        🏷️ <strong>Brand:</strong> {car.brand}
-      </p>
-      <p className="text-gray-500 text-sm">
-        📋 <strong>Model:</strong> {car.model}
-      </p>
-      <p className="text-gray-500 text-sm">
-        📅 <strong>Year:</strong> {car.year}
-      </p>
-      <p className="text-gray-500 text-sm">
-        🚙 <strong>Body Type:</strong> {car.bodyType}
-      </p>
-      <p className="text-gray-500 text-sm">
-        ⛽ <strong>Fuel:</strong> {car.fuel}
-      </p>
-      <p className="text-gray-500 text-sm">
-        ⚙️ <strong>Transmission:</strong> {car.transmission}
-      </p>
-      <p className="text-gray-500 text-sm">
-        🎨 <strong>Color:</strong> {car.color}
-      </p>
-      <p className="text-gray-500 text-sm">
-        📏 <strong>Mileage:</strong> {car.mileage} km
-      </p>
-      <p className="text-gray-500 text-sm">
-        💰 <strong>Price:</strong> ${car.price}
-      </p>
-      <p className="text-gray-500 text-sm">
-        📍 <strong>Location:</strong> {car.location}
-      </p>
-      <p className="text-gray-500 text-sm">
-        👤 <strong>User:</strong> {car.user?.username}
-      </p>
-      <div className="flex justify-between mt-4">
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
-          onClick={() => handleEdit(car)}
-        >
-          ✏️ Edit
-        </button>
-        <button
-          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center"
-          onClick={() => handleDelete(car._id)}
-        >
-          🗑️ Delete
-        </button>
-      </div>
-    </div>
-        ))}
-      </div>
-
-      {/* Edit Modal */}
-      {isModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto p-4">
-    <div className="bg-white w-full max-w-4xl p-8 rounded-lg shadow-lg mt-40">
-      <h2 className="text-xl font-bold mb-6 text-center mt-10">Edit Car</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.keys(formData).map(
-          (key) =>
-            key !== "_id" &&
-            key !== "createdAt" &&
-            key !== "updatedAt" &&
-            key !== "user" &&
-            key !== "__v" && (
-              <div key={key}>
-                <label className="block text-gray-700 font-semibold capitalize">{key}</label>
-                <input
-                  type="text"
-                  name={key}
-                  value={formData[key]}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
-              </div>
-            )
+      <div className="bg-gray-100 py-10 lg:px-32 px-12 rounded-xl">
+        <h2 className="text-3xl font-bold text-black mb-8 text-center">Available Cars</h2>
+        {cars.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-md">
+            <HiOutlineSearchCircle className="h-20 w-20 text-gray-300 mb-4" />
+            <p className="text-gray-600 text-lg font-medium">No cars found</p>
+            <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or search terms.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-10">
+              {cars.map((car) => (
+                <div
+                  key={car._id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 cursor-pointer group relative"
+                  onClick={() => handleEdit(car)}
+                >
+                  <img
+                    src={car.images?.[0] || 'https://via.placeholder.com/150'}
+                    alt={`${car.brand} ${car.model}`}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {car.year} {car.brand} {car.model}
+                    </h3>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center text-gray-500 text-sm overflow-hidden">
+                        <MapPin className="flex-shrink-0 h-4 w-4 mr-2" />
+                        <h1 className="text-ellipsis overflow-hidden whitespace-nowrap">
+                          {car.location}
+                        </h1>
+                      </div>
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {car.year}
+                      </div>
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <Gauge className="h-4 w-4 mr-2" />
+                        {car.mileage.toLocaleString()} miles
+                      </div>
+                      <hr className="my-8 border-t border-dotted border-gray-400" />
+                    </div>
+                    <div className="mt-4 flex justify-between items-center gap-4">
+                      <span className="text-2xl font-bold text-indigo-600">
+                        {car.price.toLocaleString()} ETB
+                      </span>
+                      <h3
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering handleEdit
+                          handleEdit(car);
+                        }}
+                        className="text-md bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-md flex items-center gap-1"
+                      >
+                        View Details
+                        <MdOpenInNew />
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
-      <div className="flex justify-end mt-6">
-        <button
-          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"
-          onClick={() => setIsModalOpen(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          onClick={handleUpdate}
-          disabled={isLoading}
-        >
-          {isLoading ? "Updating..." : "Update"}
-        </button>
-      </div>
-    </div>
-  </div>
+
+      {isModalOpen && (
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+          <div className="bg-white p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-6">Edit Car</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Object.keys(formData).map((key) => (
+                key !== "_id" &&
+                key !== "createdAt" &&
+                key !== "updatedAt" &&
+                key !== "user" &&
+                key !== "__v" &&
+                key !== "status" && (
+                  <div key={key}>
+                    <label className="block text-gray-700 font-semibold capitalize">{key}</label>
+                    {key === "images" ? (
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageSelection}
+                        className="w-full p-2 border border-gray-300 rounded"
+                      />
+                    ) : dropdownData[key] ? (
+                      key === "features" || key === "safety" ? (
+                        <div className="mt-2 space-y-2">
+                          {dropdownData[key].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={formData[key]?.includes(option) || false}
+                                onChange={() => handleMultiSelect(key, option)}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : key === "vehicleDetails" ? (
+                        <div className="mt-2 space-y-2">
+                          {dropdownData[key].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="vehicleDetails"
+                                checked={formData[key] === option}
+                                onChange={() => handleChange({ target: { name: key, value: option } })}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : (
+                        <select
+                          name={key}
+                          value={formData[key]}
+                          onChange={handleChange}
+                          className="w-full p-2 border border-gray-300 rounded"
+                        >
+                          <option value="">Select {key}</option>
+                          {dropdownData[key].map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      )
+                    ) : (
+                      <input
+                        type="text"
+                        name={key}
+                        value={formData[key]}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-gray-300 rounded"
+                      />
+                    )}
+                  </div>
+                )
+              ))}
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                onClick={handleUpdate}
+                disabled={isLoading}
+              >
+                {isLoading ? "Updating..." : "Update"}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

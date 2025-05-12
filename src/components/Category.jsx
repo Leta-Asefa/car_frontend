@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
 import { FaCar, FaMapMarkerAlt, FaMoneyBillWave, FaCommentDots } from "react-icons/fa";
-import { Calendar, Car, Gauge, MapPin, ChevronLeft, ChevronRight, Phone, MessageCircle, CarFront, CarTaxiFrontIcon, CarIcon, Truck, SlidersHorizontal } from "lucide-react";
+import { Calendar, Car, Gauge, MapPin, ChevronLeft, ChevronRight, Phone, MessageCircle, CarFront, CarTaxiFrontIcon, CarIcon, Truck, SlidersHorizontal, Check } from "lucide-react";
 import { MdOpenInNew } from "react-icons/md";
 import { HiOutlineSearchCircle } from "react-icons/hi";
 import { FaCarBattery } from "react-icons/fa6";
@@ -26,6 +26,17 @@ const Category = ({ setFilterType, filterType }) => {
   const itemsPerPage = 6;
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    bodyType: "",
+    brand: "",
+    model: "",
+    priceRange: null,
+    vehicleDetails: "",
+    transmission: "",
+    fuelType: "",
+    features: [],
+    safety: []
+  });
 
   const totalPages = Math.ceil(searchResults.length / itemsPerPage);
 
@@ -98,14 +109,15 @@ const Category = ({ setFilterType, filterType }) => {
   }, [])
 
 
+  const handleFilterChange = (key, value) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [key]: value,
+    }));
+  };
 
   const handleApplyFilters = async () => {
-    const filters = {
-      bodyType: filterType || null,
-      brand: selectedMake || null,
-      model: selectedModel || null,
-      priceRange: selectedPrice ? priceRanges[selectedPrice] : null,
-    };
+    console.log("Applied Filters:", filters);
 
     try {
       const response = await axios.post("http://localhost:4000/api/car/filter", filters);
@@ -136,9 +148,15 @@ const Category = ({ setFilterType, filterType }) => {
     }
   };
 
-  const handleApplyAdvancedFilters = (filters) => {
-    console.log("Applied Advanced Filters:", filters);
-    // Handle advanced filters logic here
+  const handleApplyAdvancedFilters = (advancedFilters) => {
+    console.log("Applied Advanced Filters:", advancedFilters);
+
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      ...advancedFilters, // Merge advanced filters into the main filters state
+    }));
+
+    handleApplyFilters(); // Apply the combined filters
   };
 
   return (
@@ -179,25 +197,26 @@ const Category = ({ setFilterType, filterType }) => {
       {/* Categories */}
       <div className="flex flex-wrap flex-row justify-center items-center gap-5">
           {[
-            { type: "SUV", icon: <FaCar className="text-black h-6 w-6" /> },
-            { type: "Sedan", icon: <CarFront className="text-black h-6 w-6" /> },
-            { type: "Hatchback", icon: <CarTaxiFrontIcon className="text-black h-6 w-6" /> },
-            { type: "Convertible", icon: <CarIcon className="text-black h-6 w-6" /> },
-            { type: "Coupe", icon: <FaCar className="text-black h-6 w-6" /> },
-            { type: "Crossover", icon: <FaCar className="text-black h-6 w-6" /> },
-            { type: "Pickup", icon: <FaCar className="text-black h-6 w-6" /> },
-            { type: "Truck", icon: <Truck className="text-black h-6 w-6" /> },
-            { type: "Van", icon: <PiVan className="text-black h-6 w-6" /> },
+            { type: "Any", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "SUV", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "Sedan", icon: <CarFront className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "Hatchback", icon: <CarTaxiFrontIcon className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "Convertible", icon: <CarIcon className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "Coupe", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "Crossover", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "Pickup", icon: <FaCar className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "Truck", icon: <Truck className="text-black h-6 w-6" />, filterKey: "bodyType" },
+            { type: "Van", icon: <PiVan className="text-black h-6 w-6" />, filterKey: "bodyType" },
           ].map((category, index) => (
             <div
               key={index}
-              className="border p-4 bg-white text-black rounded-xl flex flex-wrap justify-center items-center gap-2 hover:shadow-md hover:bg-slate-100 cursor-pointer"
+              className={`border p-4 bg-white text-black rounded-xl flex flex-wrap justify-center items-center gap-2 hover:shadow-md hover:bg-slate-100 cursor-pointer ${filters.bodyType === category.type ? 'bg-indigo-100' : ''}`}
               onClick={() => {
-                setFilterType(category.type);
+                handleFilterChange(category.filterKey, category.type==='Any'?'':category.type);
                 setSelectedMake("");
                 setSelectedModel("");
                 setSelectedPrice("");
-                handleApplyFilters();
+                // handleApplyFilters();
               }}
             >
               {category.icon}
@@ -211,12 +230,12 @@ const Category = ({ setFilterType, filterType }) => {
 
       {/* Dropdown Filters */}
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto my-10">
-        <div className="flex flex-row justify-between gap-3">
+        <div className="flex flex-row justify-between items-end gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Make</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
             <select
-              value={selectedMake}
-              onChange={(e) => setSelectedMake(e.target.value)}
+              value={filters.brand}
+              onChange={(e) => handleFilterChange("brand", e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
               <option value="">Any Make</option>
@@ -228,8 +247,8 @@ const Category = ({ setFilterType, filterType }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
             <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
+              value={filters.model}
+              onChange={(e) => handleFilterChange("model", e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
               <option value="">Any Model</option>
@@ -241,13 +260,13 @@ const Category = ({ setFilterType, filterType }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
             <select
-              value={selectedPrice}
-              onChange={(e) => setSelectedPrice(e.target.value)}
+              value={filters.priceRange ? JSON.stringify(filters.priceRange) : ""}
+              onChange={(e) => handleFilterChange("priceRange", e.target.value ? JSON.parse(e.target.value) : null)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
               <option value="">Any Price</option>
-              {Object.keys(priceRanges).map((range) => (
-                <option key={range} value={range}>{range}</option>
+              {Object.entries(priceRanges).map(([range, value]) => (
+                <option key={range} value={JSON.stringify(value)}>{range}</option>
               ))}
             </select>
           </div>
@@ -258,16 +277,16 @@ const Category = ({ setFilterType, filterType }) => {
               onClick={handleApplyFilters}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center justify-center"
             >
-              Apply Filters
+              Search
             </button>
         </div>
 
-        <div className="flex justify-end mb-4 ">
+        <div className="">
           <button
             onClick={() => setIsAdvancedFiltersOpen(true)}
             className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-700"
           >
-            <SlidersHorizontal className="h-5 w-5" />
+            <SlidersHorizontal className="h-10 w-10 border border-gray-200 rounded-lg p-2" />
           </button>
         </div>
         <AdvancedFilters
@@ -350,7 +369,7 @@ const Category = ({ setFilterType, filterType }) => {
                   </div>
                 ))}
               </div>
-              {searchResults.length > itemsPerPage && (
+              {searchResults.length !==0  && (
                 <div className="flex justify-center items-center space-x-4 mt-6">
                   <button
                     onClick={handlePrevPage}
@@ -384,7 +403,7 @@ const Category = ({ setFilterType, filterType }) => {
             <div className="p-6">
               <div className="flex justify-between items-start">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  {selectedCar.year} {selectedCar.brand} {selectedCar.model}
+                  {selectedCar.title}
                 </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -459,6 +478,20 @@ const Category = ({ setFilterType, filterType }) => {
                       ))}
                     </ul>
                   </div>
+
+
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-2">Safety</h3>
+                    <ul className="grid grid-cols-2 gap-6">
+                      {selectedCar?.safety?.map((safety, index) => (
+                        <li key={index} className="flex items-center text-gray-600">
+                          <Check className="h-5 w-5 mr-2 text-green-500" />
+                          {safety}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
                 </div>
 
                 {/* Right Column - Details */}
@@ -534,6 +567,27 @@ const Category = ({ setFilterType, filterType }) => {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center text-gray-600">
+                          <MapPin className="h-5 w-5 mr-3 text-gray-400" />
+                          <span>Brand</span>
+                        </div>
+                        <span className="font-medium">{selectedCar.brand}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-gray-600">
+                          <MapPin className="h-5 w-5 mr-3 text-gray-400" />
+                          <span>Body Type</span>
+                        </div>
+                        <span className="font-medium">{selectedCar.bodyType}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-gray-600">
+                          <MapPin className="h-5 w-5 mr-3 text-gray-400" />
+                          <span>Model</span>
+                        </div>
+                        <span className="font-medium">{selectedCar.model}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-gray-600">
                           <Calendar className="h-5 w-5 mr-3 text-gray-400" />
                           <span>Year</span>
                         </div>
@@ -582,11 +636,23 @@ const Category = ({ setFilterType, filterType }) => {
                         </div>
                         <span className="font-medium">{selectedCar.transmission}</span>
                       </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-gray-600">
+                          <MapPin className="h-5 w-5 mr-3 text-gray-400" />
+                          <span>Vehicle Details</span>
+                        </div>
+                        <span className="font-medium">{selectedCar.vehicleDetails}</span>
+                      </div>
                     </div>
                   </div>
 
+                 
+                
+
 
                 </div>
+
+
               </div>
 
               {recommendations.length > 0 && (

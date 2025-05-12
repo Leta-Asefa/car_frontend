@@ -14,8 +14,8 @@ const filterSections = {
     title: 'Fuel Type',
     options: ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'Plug-in Hybrid']
   },
-  bodyStyle: {
-    title: 'Body Style',
+  bodyType: {
+    title: 'Body Type', // Updated label from Body Style to Body Type
     options: ['Sedan', 'SUV', 'Hatchback', 'Coupe', 'Truck', 'Van', 'Wagon', 'Convertible']
   },
   features: {
@@ -53,14 +53,20 @@ console.log("Selected Filters",selectedFilters)
   },[selectedFilters])
 
   const handleFilterChange = (section, value) => {
-    setSelectedFilters(prev => ({
-      ...prev,
-      [section]: prev[section]
-        ? prev[section].includes(value)
-          ? prev[section].filter(v => v !== value)
-          : [...prev[section], value]
-        : [value]
-    }));
+    setSelectedFilters(prev => {
+      if (section === "features" || section === "safety") {
+        return {
+          ...prev,
+          [section]: prev[section]?.includes(value)
+            ? prev[section].filter(v => v !== value)
+            : [...(prev[section] || []), value]
+        };
+      }
+      return {
+        ...prev,
+        [section]: value // Send as a string for other sections
+      };
+    });
   };
 
   const handleApply = () => {
@@ -69,7 +75,14 @@ console.log("Selected Filters",selectedFilters)
   };
 
   const handleClear = () => {
-    setSelectedFilters({});
+    setSelectedFilters({
+      vehicleDetails: "",
+      transmission: "",
+      fuelType: "",
+      bodyType: "",
+      features: [],
+      safety: []
+    });
   };
 
   if (!isOpen) return null;
@@ -99,7 +112,8 @@ console.log("Selected Filters",selectedFilters)
                   {section.options.map((option) => (
                     <label key={option} className="flex items-center">
                       <input
-                        type="checkbox"
+                        type={key === "transmission" || key === "vehicleDetails" || key === "fuelType" || key === "bodyType" ? "radio" : "checkbox"}
+                        name={key}
                         checked={selectedFilters[key]?.includes(option) || false}
                         onChange={() => handleFilterChange(key, option)}
                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
