@@ -166,6 +166,10 @@ const Category = ({ setFilterType, filterType }) => {
     }
   }, [filters.bodyType]);
 
+  useEffect(() => {
+    handleApplyFilters(); // Call handleApplyFilters whenever advanced filters change
+  }, [filters.bodyType, filters.brand, filters.model, filters.priceRange, filters.vehicleDetails, filters.transmission, filters.fuelType, filters.features, filters.safety]);
+
   const handleCategoryClick = (category) => {
     handleFilterChange(category.filterKey, category.type === 'Any' ? '' : category.type);
     setSelectedMake("");

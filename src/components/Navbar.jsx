@@ -84,13 +84,17 @@ const Navbar = ({ children }) => {
             onChange={(e) => setQuery(e.target.value)}
             className="w-full px-4 py-2 border rounded-l-md focus:outline-none"
           />
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700">
+          <button 
+            className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
+            onClick={() => {
+              const availableCarsSection = document.getElementById("available-cars");
+              if (availableCarsSection) {
+                availableCarsSection.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+          >
             Search
           </button>
-
-
-
-
         </div>
 
         {/* Navigation Links */}
