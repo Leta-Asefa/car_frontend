@@ -167,12 +167,11 @@ const CarManager = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-32">
+    <div className="min-h-screen bg-gray-100 p-12">
       <Navbar/>
-      <h1 className="text-3xl font-bold text-center mb-6">Manage Your Car Posts</h1>
+      <h1 className="text-3xl font-bold text-center mb-6 mt-10">Manage Your Car Posts</h1>
 
-      <div className="bg-gray-100 py-10 lg:px-32 px-12 rounded-xl">
-        <h2 className="text-3xl font-bold text-black mb-8 text-center">Available Cars</h2>
+      <div className="bg-gray-100 py-10 lg:px-20 rounded-xl">
         {cars.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-md">
             <HiOutlineSearchCircle className="h-20 w-20 text-gray-300 mb-4" />

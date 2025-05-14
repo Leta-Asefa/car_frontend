@@ -15,10 +15,16 @@ const ManageUsers = () => {
   }, [tab]);
 
   const fetchUsers = async () => {
-    const url =
-      tab === "all"
-        ? "http://localhost:4000/api/auth/all"
-        : "http://localhost:4000/api/auth/unapproved";
+    let url;
+    if (tab === "all") {
+      url = "http://localhost:4000/api/auth/all";
+    } else if (tab === "approved") {
+      url = "http://localhost:4000/api/auth/approved";
+    } else if (tab === "suspended") {
+      url = "http://localhost:4000/api/auth/suspended";
+    } else {
+      url = "http://localhost:4000/api/auth/unapproved";
+    }
     const res = await axios.get(url);
     setUsers(res.data);
   };
@@ -29,10 +35,65 @@ const ManageUsers = () => {
         userId,
         action,
       });
-      setUsers((prev) => prev.filter((u) => u._id !== userId));
-      setSelectedUser(null);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId
+            ? { ...u, status: action === "approve" ? "approved" : action === "decline" ? "declined" : u.status }
+            : u
+        )
+      );
+      setSelectedUser((prev) =>
+        prev && prev._id === userId
+          ? { ...prev, status: action === "approve" ? "approved" : action === "decline" ? "declined" : prev.status }
+          : prev
+      );
     } catch (err) {
       alert("Action failed.");
+    }
+  };
+
+  const handleSuspend = async (userId, action) => {
+    try {
+      await axios.post("http://localhost:4000/api/auth/suspend", { userId, action });
+      if (action === "suspend") {
+        if (tab === "approved") {
+          setUsers((prev) => prev.filter((u) => u._id !== userId));
+          setSelectedUser(null);
+        } else {
+          setUsers((prev) =>
+            prev.map((u) =>
+              u._id === userId
+                ? { ...u, status: "suspended" }
+                : u
+            )
+          );
+          setSelectedUser((prev) =>
+            prev && prev._id === userId
+              ? { ...prev, status: "suspended" }
+              : prev
+          );
+        }
+      } else if (action === "unsuspend") {
+        if (tab === "suspended") {
+          setUsers((prev) => prev.filter((u) => u._id !== userId));
+          setSelectedUser(null);
+        } else {
+          setUsers((prev) =>
+            prev.map((u) =>
+              u._id === userId
+                ? { ...u, status: "approved" }
+                : u
+            )
+          );
+          setSelectedUser((prev) =>
+            prev && prev._id === userId
+              ? { ...prev, status: "approved" }
+              : prev
+          );
+        }
+      }
+    } catch (err) {
+      alert("Suspend/Unsuspend failed.");
     }
   };
 
@@ -49,14 +110,18 @@ const ManageUsers = () => {
 
         {/* Tabs */}
         <div className="flex gap-4 mb-4 border-b">
-          {["unapproved", "all"].map((t) => (
+          {[
+            { key: "unapproved", label: "Unapproved Users" },
+            { key: "approved", label: "Approved Users" },
+            { key: "suspended", label: "Suspended Users" },
+            { key: "all", label: "All Users" },
+          ].map((t) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`py-2 px-4 font-semibold border-b-2 ${tab === t ? "border-blue-500 text-blue-600" : "border-transparent"
-                }`}
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`py-2 px-4 font-semibold border-b-2 ${tab === t.key ? "border-blue-500 text-blue-600" : "border-transparent"}`}
             >
-              {t === "unapproved" ? "Unapproved Users" : "All Users"}
+              {t.label}
             </button>
           ))}
         </div>
@@ -168,6 +233,64 @@ const ManageUsers = () => {
                     <FaTimes />
                     Decline
                   </button>
+                </>
+              )}
+              {tab === "approved" && (
+                <button
+                  onClick={() => handleSuspend(selectedUser._id, "suspend")}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded flex items-center gap-2"
+                >
+                  <FaTimes />
+                  Suspend
+                </button>
+              )}
+              {tab === "suspended" && (
+                <button
+                  onClick={() => handleSuspend(selectedUser._id, "unsuspend")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+                >
+                  <FaCheck />
+                  Remove Suspend
+                </button>
+              )}
+              {tab === "all" && (
+                <>
+                  {selectedUser.status === "approved" && (
+                    <button
+                      onClick={() => handleSuspend(selectedUser._id, "suspend")}
+                      className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded flex items-center gap-2"
+                    >
+                      <FaTimes />
+                      Suspend
+                    </button>
+                  )}
+                  {selectedUser.status === "suspended" && (
+                    <button
+                      onClick={() => handleSuspend(selectedUser._id, "unsuspend")}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+                    >
+                      <FaCheck />
+                      Remove Suspend
+                    </button>
+                  )}
+                  {selectedUser.status === "unapproved" && (
+                    <>
+                      <button
+                        onClick={() => handleApproval(selectedUser._id, "approve")}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2"
+                      >
+                        <FaCheck />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleApproval(selectedUser._id, "decline")}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center gap-2"
+                      >
+                        <FaTimes />
+                        Decline
+                      </button>
+                    </>
+                  )}
                 </>
               )}
               <button
