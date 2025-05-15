@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Check, Search } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { FaMoneyBillAlt, FaCarSide, FaCalendarAlt, FaTags, FaPalette, FaGasPump, FaCogs, FaTachometerAlt, FaMapMarkerAlt, FaUser, FaInfoCircle, FaListAlt, FaCheckCircle } from "react-icons/fa";
 
 export default function ComparisonPage() {
   const [car1, setCar1] = useState(null);
@@ -12,6 +13,8 @@ export default function ComparisonPage() {
   const [filteredCars2, setFilteredCars2] = useState([]);
   const [showDropdown1, setShowDropdown1] = useState(false);
   const [showDropdown2, setShowDropdown2] = useState(false);
+  const [car1ImageIndex, setCar1ImageIndex] = useState(0);
+  const [car2ImageIndex, setCar2ImageIndex] = useState(0);
 
   const fetchCars = async (query, setFunction) => {
     if (!query.trim()) {
@@ -54,6 +57,50 @@ export default function ComparisonPage() {
     setShowDropdown2(false);
   };
 
+  const renderImageSlider = (images, imageIndex, setImageIndex) => (
+    <div className="relative w-full h-64 flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
+      {images && images.length > 0 ? (
+        <>
+          <img
+            src={images[imageIndex]}
+            alt={`Car image ${imageIndex + 1}`}
+            className="w-full h-64 object-cover rounded-lg"
+          />
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={() => setImageIndex(imageIndex === 0 ? images.length - 1 : imageIndex - 1)}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
+              >
+                ❮
+              </button>
+              <button
+                onClick={() => setImageIndex(imageIndex === images.length - 1 ? 0 : imageIndex + 1)}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
+              >
+                ❯
+              </button>
+            </>
+          )}
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
+            {images.map((_, idx) => (
+              <span
+                key={idx}
+                className={`w-3 h-3 rounded-full ${idx === imageIndex ? 'bg-blue-600' : 'bg-gray-300'} inline-block`}
+                onClick={() => setImageIndex(idx)}
+                style={{ cursor: 'pointer' }}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-400">
+          No image
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <Navbar />
@@ -84,7 +131,7 @@ export default function ComparisonPage() {
                     className="p-2 hover:bg-gray-100 cursor-pointer"
                     onClick={() => selectCar1(car)}
                   >
-                    {car.year} {car.brand} {car.model}
+                    {car.year} {car.brand} {car.model} {car.title}
                   </div>
                 ))}
               </div>
@@ -115,115 +162,148 @@ export default function ComparisonPage() {
                     className="p-2 hover:bg-gray-100 cursor-pointer"
                     onClick={() => selectCar2(car)}
                   >
-                    {car.year} {car.brand} {car.model}
+                    {car.year} {car.brand} {car.model} {car.title}
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Car Images */}
-          <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+          {/* Car Images - now as sliders */}
+          <div>
             {car1 ? (
-              <img
-                src={car1.images?.[0]}
-                alt={`${car1.brand} ${car1.model}`}
-                className="w-full h-full object-cover"
-              />
+              renderImageSlider(car1.images || [], car1ImageIndex, setCar1ImageIndex)
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden w-full h-64 flex items-center justify-center text-gray-400">
                 Select a car
               </div>
             )}
           </div>
-
-
-          <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+          <div>
             {car2 ? (
-              <img
-                src={car2.images?.[0]}
-                alt={`${car2.brand} ${car2.model}`}
-                className="w-full h-full object-cover"
-              />
+              renderImageSlider(car2.images || [], car2ImageIndex, setCar2ImageIndex)
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden w-full h-64 flex items-center justify-center text-gray-400">
                 Select a car
               </div>
             )}
           </div>
 
-          {/* Basic Info */}
+          {/* Basic Info - Car 1 */}
           {car1 && (
-  <div className="space-y-2 border p-4 rounded shadow">
-    <p className="text-2xl font-bold text-indigo-600">
-      ${Number(car1.price).toLocaleString()}
-    </p>
-    <p className="text-lg font-semibold">{car1.title}</p>
-    <p><strong>Brand:</strong> {car1.brand}</p>
-    <p><strong>Model:</strong> {car1.model}</p>
-    <p><strong>Year:</strong> {car1.year}</p>
-    <p><strong>Body Type:</strong> {car1.bodyType}</p>
-    <p><strong>Color:</strong> {car1.color}</p>
-    <p><strong>Fuel:</strong> {car1.fuel}</p>
-    <p><strong>Transmission:</strong> {car1.transmission}</p>
-    <p><strong>Mileage:</strong> {Number(car1.mileage).toLocaleString()} miles</p>
-    <p><strong>Location:</strong> {car1.location}</p>
-    <p><strong>Description:</strong> {car1.description}</p>
-    <p><strong>Seller:</strong> {car1.user?.username} ({car1.user?.email})</p>
-    <div className="space-x-2">
-      {car1.images?.map((img, idx) => (
-        <img
-          key={idx}
-          src={img}
-          alt={`Car1 image ${idx + 1}`}
-          className="inline-block h-32 w-48 object-cover rounded"
-        />
-      ))}
-    </div>
-  </div>
-)}
+            <div className="space-y-2 border p-4 rounded shadow bg-white flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-indigo-600 text-2xl font-bold">
+                <FaMoneyBillAlt />
+                <span>{Number(car1.price).toLocaleString()} ETB</span>
+              </div>
+              <div className="flex items-center gap-2 text-lg font-semibold">
+                <FaCarSide />
+                <span>{car1.title}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="flex items-center gap-2"><FaTags className="text-blue-600" /> {car1.brand}</div>
+                <div className="flex items-center gap-2"><FaInfoCircle className="text-blue-600" /> {car1.model}</div>
+                <div className="flex items-center gap-2"><FaCalendarAlt className="text-blue-600" /> {car1.year}</div>
+                <div className="flex items-center gap-2"><FaTags className="text-blue-600" /> {car1.bodyType}</div>
+                <div className="flex items-center gap-2"><FaPalette className="text-blue-600" /> {car1.color}</div>
+                <div className="flex items-center gap-2"><FaGasPump className="text-blue-600" /> {car1.fuel}</div>
+                <div className="flex items-center gap-2"><FaCogs className="text-blue-600" /> {car1.transmission}</div>
+                <div className="flex items-center gap-2"><FaTachometerAlt className="text-blue-600" /> {Number(car1.mileage).toLocaleString()} miles</div>
+                <div className="flex items-center gap-2"><FaListAlt className="text-blue-600" /> {car1.vehicleDetails}</div>
+                <div className="flex items-center gap-2 col-span-2"><FaMapMarkerAlt className="text-blue-600" /> {car1.location}</div>
+                <div className="flex items-center gap-2 col-span-2"><FaListAlt className="text-blue-600" /> Status: {car1.status}</div>
+              </div>
+              <div className="flex items-center gap-2 mt-2"><FaUser className="text-blue-600" /> {car1.user?.username} <span className="text-xs text-gray-400">({car1.user?.email})</span></div>
+              {/* Features */}
+              {car1.features && car1.features.length > 0 && (
+                <div className="mt-2">
+                  <div className="font-semibold mb-1 flex items-center gap-2"><FaListAlt className="text-blue-600" /> Features</div>
+                  <ul className="grid grid-cols-2 gap-1">
+                    {car1.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center text-gray-700 text-sm gap-2">
+                        <FaCheckCircle className="text-green-600" /> {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {/* Safety */}
+              {car1.safety && car1.safety.length > 0 && (
+                <div className="mt-2">
+                  <div className="font-semibold mb-1 flex items-center gap-2"><FaListAlt className="text-blue-600" /> Safety</div>
+                  <ul className="grid grid-cols-2 gap-1">
+                    {car1.safety.map((item, idx) => (
+                      <li key={idx} className="flex items-center text-gray-700 text-sm gap-2">
+                        <FaCheckCircle className="text-green-600" /> {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="mt-2 text-gray-700"><FaInfoCircle className="text-blue-600 align-middle mr-1" /> {car1.description}</div>
+            </div>
+          )}
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-bold mb-4">
-              {car2
-                ? `${car2.year} ${car2.brand} ${car2.model}`
-                : "Select a car"}
+          {/* Basic Info - Car 2 */}
+          <div className="bg-white p-6 rounded-lg shadow flex flex-col gap-2">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <FaCarSide className="text-blue-600" />
+              {car2 ? `${car2.year} ${car2.brand} ${car2.model}` : "Select a car"}
             </h3>
             {car2 && (
-  <div className="space-y-2">
-    <p className="text-2xl font-bold text-indigo-600">
-      ${Number(car2.price).toLocaleString()}
-    </p>
-    <p className="text-lg font-semibold">{car2.title}</p>
-    <p><strong>Brand:</strong> {car2.brand}</p>
-    <p><strong>Model:</strong> {car2.model}</p>
-    <p><strong>Year:</strong> {car2.year}</p>
-    <p><strong>Body Type:</strong> {car2.bodyType}</p>
-    <p><strong>Color:</strong> {car2.color}</p>
-    <p><strong>Fuel:</strong> {car2.fuel}</p>
-    <p><strong>Transmission:</strong> {car2.transmission}</p>
-    <p><strong>Mileage:</strong> {Number(car2.mileage).toLocaleString()} miles</p>
-    <p><strong>Location:</strong> {car2.location}</p>
-    <p><strong>Description:</strong> {car2.description}</p>
-    <p><strong>Seller:</strong> {car2.user?.username} ({car2.user?.email})</p>
-    <div className="space-x-2">
-      {car2.images?.map((img, idx) => (
-        <img
-          key={idx}
-          src={img}
-          alt={`Car image ${idx + 1}`}
-          className="inline-block h-32 w-48 object-cover rounded"
-        />
-      ))}
-    </div>
-  </div>
-)}
-
+              <>
+                <div className="flex items-center gap-2 text-indigo-600 text-2xl font-bold">
+                  <FaMoneyBillAlt />
+                  <span>{Number(car2.price).toLocaleString()} ETB</span>
+                </div>
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                  <FaCarSide />
+                  <span>{car2.title}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="flex items-center gap-2"><FaTags className="text-blue-600" /> {car2.brand}</div>
+                  <div className="flex items-center gap-2"><FaInfoCircle className="text-blue-600" /> {car2.model}</div>
+                  <div className="flex items-center gap-2"><FaCalendarAlt className="text-blue-600" /> {car2.year}</div>
+                  <div className="flex items-center gap-2"><FaTags className="text-blue-600" /> {car2.bodyType}</div>
+                  <div className="flex items-center gap-2"><FaPalette className="text-blue-600" /> {car2.color}</div>
+                  <div className="flex items-center gap-2"><FaGasPump className="text-blue-600" /> {car2.fuel}</div>
+                  <div className="flex items-center gap-2"><FaCogs className="text-blue-600" /> {car2.transmission}</div>
+                  <div className="flex items-center gap-2"><FaTachometerAlt className="text-blue-600" /> {Number(car2.mileage).toLocaleString()} miles</div>
+                  <div className="flex items-center gap-2"><FaListAlt className="text-blue-600" /> {car2.vehicleDetails}</div>
+                  <div className="flex items-center gap-2 col-span-2"><FaMapMarkerAlt className="text-blue-600" /> {car2.location}</div>
+                  <div className="flex items-center gap-2 col-span-2"><FaListAlt className="text-blue-600" /> Status: {car2.status}</div>
+                </div>
+                <div className="flex items-center gap-2 mt-2"><FaUser className="text-blue-600" /> {car2.user?.username} <span className="text-xs text-gray-400">({car2.user?.email})</span></div>
+                {/* Features */}
+                {car2.features && car2.features.length > 0 && (
+                  <div className="mt-2">
+                    <div className="font-semibold mb-1 flex items-center gap-2"><FaListAlt className="text-blue-600" /> Features</div>
+                    <ul className="grid grid-cols-2 gap-1">
+                      {car2.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-center text-gray-700 text-sm gap-2">
+                          <FaCheckCircle className="text-green-600" /> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {/* Safety */}
+                {car2.safety && car2.safety.length > 0 && (
+                  <div className="mt-2">
+                    <div className="font-semibold mb-1 flex items-center gap-2"><FaListAlt className="text-blue-600" /> Safety</div>
+                    <ul className="grid grid-cols-2 gap-1">
+                      {car2.safety.map((item, idx) => (
+                        <li key={idx} className="flex items-center text-gray-700 text-sm gap-2">
+                          <FaCheckCircle className="text-green-600" /> {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="mt-2 text-gray-700"><FaInfoCircle className="text-blue-600 align-middle mr-1" /> {car2.description}</div>
+              </>
+            )}
           </div>
-
-       
-
-        
         </div>
       </div>
     </>

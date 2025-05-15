@@ -9,6 +9,7 @@ const CarComparison = ({ listing, onClose, carList }) => {
   const [compareListing, setCompareListing] = useState(null);
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
+  const [compareImageIndex, setCompareImageIndex] = useState(0);
 
   const handleNextImage = () => {
     if (isSliding) return;
@@ -32,12 +33,6 @@ const CarComparison = ({ listing, onClose, carList }) => {
     }, 300);
   };
 
-  // const handleSelectCompareCar = (carId) => {
-  //   const selectedCar = listing.find((car) => car.id === carId);
-  //   setCompareListing(selectedCar);
-  //   setShowCompareModal(false);
-  // };
-
   const handleSelectCompareCar = (carId) => {
     const selectedCar = mockListings.find((car) => car.id === carId);
     setCompareListing(selectedCar);
@@ -49,39 +44,47 @@ const CarComparison = ({ listing, onClose, carList }) => {
     setSelectedListing(id);
   };
 
-  const renderCarDetails = (car) => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div>
-        <div className="mt-6 relative overflow-hidden">
-          <div
-            className="flex transition-transform duration-300"
-            style={{
-              transform: `translateX(-${currentImageIndex * 100}%)`,
-            }}
-          >
-            {car.images.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`${car.make} ${car.model}`}
-                className="w-full h-96 object-cover flex-shrink-0"
-              />
-            ))}
-          </div>
+  const renderImageSlider = (images, imageIndex, setImageIndex) => (
+    <div className="relative w-full h-80 mb-6 flex items-center justify-center">
+      <img
+        src={images[imageIndex]}
+        alt={`Car image ${imageIndex + 1}`}
+        className="w-full h-80 object-cover rounded-lg"
+      />
+      {images.length > 1 && (
+        <>
           <button
-            onClick={handlePrevImage}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+            onClick={() => setImageIndex(imageIndex === 0 ? images.length - 1 : imageIndex - 1)}
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
           >
             ❮
           </button>
           <button
-            onClick={handleNextImage}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+            onClick={() => setImageIndex(imageIndex === images.length - 1 ? 0 : imageIndex + 1)}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full hover:bg-opacity-70"
           >
             ❯
           </button>
-        </div>
+        </>
+      )}
+      {/* Dots indicator */}
+      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
+        {images.map((_, idx) => (
+          <span
+            key={idx}
+            className={`w-3 h-3 rounded-full ${idx === imageIndex ? 'bg-blue-600' : 'bg-gray-300'} inline-block`}
+            onClick={() => setImageIndex(idx)}
+            style={{ cursor: 'pointer' }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 
+  const renderCarDetails = (car, imageIndex, setImageIndex) => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div>
+        {renderImageSlider(car.images, imageIndex, setImageIndex)}
         <div className="mt-6">
           <h3 className="text-lg font-semibold mb-2">Description</h3>
           <p className="text-gray-600">{car.description}</p>
@@ -158,13 +161,12 @@ const CarComparison = ({ listing, onClose, carList }) => {
             </button>
           </div>
 
-{/* fix this code */}
-          {renderCarDetails(listing)}
+          {renderCarDetails(listing, currentImageIndex, setCurrentImageIndex)}
 
           {compareListing && (
             <>
               <hr className="my-6 border-gray-200" />
-              {renderCarDetails(compareListing)}
+              {renderCarDetails(compareListing, compareImageIndex, setCompareImageIndex)}
             </>
           )}
 
