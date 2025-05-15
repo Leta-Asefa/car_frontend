@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { FaHistory } from "react-icons/fa";
 
 const Category = ({ setFilterType, filterType }) => {
   const [filteredCars, setFilteredCars] = useState([]);
@@ -9,6 +10,17 @@ const Category = ({ setFilterType, filterType }) => {
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
+
+  const [showHistory, setShowHistory] = useState(false);
+  const [searchHistory, setSearchHistory] = useState([
+    // Example data, replace with real data if available
+    "Toyota Corolla",
+    "Tesla Model S",
+    "BMW X5",
+  ]);
+
+  const handleOpenHistory = () => setShowHistory(true);
+  const handleCloseHistory = () => setShowHistory(false);
 
   const priceRanges = {
     "Under 20000": { min: 0, max: 20000 },
@@ -54,59 +66,58 @@ const Category = ({ setFilterType, filterType }) => {
         Browse Cars By Type
       </h2>
 
-   {/* Dropdown Filters */}
-   <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto my-10">
-  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Make</label>
-      <select
-        value={selectedMake}
-        onChange={(e) => setSelectedMake(e.target.value)}
-        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-      >
-        <option value="">Any Make</option>
-        {["Toyota", "BMW", "Mercedes", "Audi"].map((make) => (
-          <option key={make} value={make}>{make}</option>
-        ))}
-      </select>
-    </div>
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-      <select
-        value={selectedModel}
-        onChange={(e) => setSelectedModel(e.target.value)}
-        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-      >
-        <option value="">Any Model</option>
-        {["Corolla", "X5", "C-Class", "Q7"].map((model) => (
-          <option key={model} value={model}>{model}</option>
-        ))}
-      </select>
-    </div>
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
-      <select
-        value={selectedPrice}
-        onChange={(e) => setSelectedPrice(e.target.value)}
-        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-      >
-        <option value="">Any Price</option>
-        {Object.keys(priceRanges).map((range) => (
-          <option key={range} value={range}>{range}</option>
-        ))}
-      </select>
-    </div>
-    <div className="md:col-span-2 flex items-end">
-      <button
-        onClick={handleApplyFilters}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center justify-center"
-      >
-        Apply Filters
-      </button>
-    </div>
-  </div>
-</div>
-
+      {/* Dropdown Filters */}
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto my-10">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Make</label>
+            <select
+              value={selectedMake}
+              onChange={(e) => setSelectedMake(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              <option value="">Any Make</option>
+              {["Toyota", "BMW", "Mercedes", "Audi"].map((make) => (
+                <option key={make} value={make}>{make}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              <option value="">Any Model</option>
+              {["Corolla", "X5", "C-Class", "Q7"].map((model) => (
+                <option key={model} value={model}>{model}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+            <select
+              value={selectedPrice}
+              onChange={(e) => setSelectedPrice(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              <option value="">Any Price</option>
+              {Object.keys(priceRanges).map((range) => (
+                <option key={range} value={range}>{range}</option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-2 flex items-end">
+            <button
+              onClick={handleApplyFilters}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center justify-center"
+            >
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Categories */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-4 px-20">
@@ -132,8 +143,6 @@ const Category = ({ setFilterType, filterType }) => {
           </div>
         ))}
       </div>
-
-   
 
       {/* Filter Results */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-10 mt-10">
@@ -192,6 +201,37 @@ const Category = ({ setFilterType, filterType }) => {
             <button
               className="mt-6 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
               onClick={() => setIsModalOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Search History Icon */}
+      <span className="inline-block cursor-pointer" onClick={handleOpenHistory}>
+        <FaHistory className="text-2xl text-blue-600 hover:text-blue-800" title="View Search History" />
+      </span>
+
+      {/* Simple Modal for Search History */}
+      {showHistory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 min-w-[320px] text-center">
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center justify-center gap-2">
+              <FaHistory className="text-blue-600" /> Search History
+            </h2>
+            <ul className="mb-6 text-gray-700 text-left max-h-60 overflow-y-auto">
+              {searchHistory.length === 0 ? (
+                <li className="text-gray-400">No search history found.</li>
+              ) : (
+                searchHistory.map((item, idx) => (
+                  <li key={idx} className="py-1 border-b last:border-b-0">{item}</li>
+                ))
+              )}
+            </ul>
+            <button
+              onClick={handleCloseHistory}
+              className="px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
             >
               Close
             </button>

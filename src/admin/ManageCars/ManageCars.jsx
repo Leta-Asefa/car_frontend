@@ -76,29 +76,25 @@ const ManageCars = () => {
   );
 
   return (
-    <Layout>
+    <div>
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Manage Cars</h1>
 
-        <div className="flex gap-4 mb-4">
-          <button
-            className={`px-4 py-2 rounded ${activeTab === "unapproved" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-            onClick={() => setActiveTab("unapproved")}
-          >
-            Unapproved Cars
-          </button>
-          <button
-            className={`px-4 py-2 rounded ${activeTab === "approved" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-            onClick={() => setActiveTab("approved")}
-          >
-            Approved Cars
-          </button>
-          <button
-            className={`px-4 py-2 rounded ${activeTab === "all" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-            onClick={() => setActiveTab("all")}
-          >
-            All Cars
-          </button>
+        {/* Car Tabs */}
+        <div className="flex gap-4 mb-4 border-b">
+          {[
+            { key: "all", label: "All Cars" },
+            { key: "approved", label: "Approved Cars" },
+            { key: "unapproved", label: "Unapproved Cars" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`py-2 px-4 font-semibold border-b-2 ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent"}`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
         <input
@@ -110,7 +106,7 @@ const ManageCars = () => {
         />
 
         {filteredCars.length === 0 ? (
-          <div className="text-center text-gray-500 mt-4">No cars match your search.</div>
+          <div className="text-center text-gray-500 mt-4">No unapproved cars.</div>
         ) : (
           <div className="overflow-x-auto max-h-[60vh]">
             <table className="min-w-full bg-white rounded shadow">
@@ -353,8 +349,7 @@ const ManageCars = () => {
       {showConfirmation && (
         <ConfirmationModal message="Car approved successfully!" />
       )}
-
-    </Layout>
+</div>
   );
 };
 

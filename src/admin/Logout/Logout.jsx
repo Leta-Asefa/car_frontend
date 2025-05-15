@@ -1,41 +1,68 @@
 // src/pages/admin/Logout.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { logout } from '../../utils/auth'; // Add your logout function here
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 
 const Logout = () => {
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(true);
+  const {logout}=useAuth()
 
-  const handleLogout = () => {
-    // Call your logout logic here (e.g., clearing tokens, etc.)
-    logout();  // Implement this function to handle logout (localStorage.clear(), etc.)
-    navigate('/login'); // Redirect to login page after logout
+  const handleConfirm = async () => {
+    try {
+     
+      const status=await  logout();
+      if(status){
+        navigate('/');
+      }
+    } catch (err) {
+      setShowModal(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setShowModal(false);
+    navigate('/admin/dashboard');
+  };
+
+  useEffect(() => {
+    setShowModal(true);
+  }, []);
+
+  // Simple modal definition
+  const Modal = ({ isOpen, children }) => {
+    if (!isOpen) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="bg-white rounded-lg shadow-lg p-8 min-w-[320px] text-center">
+          {children}
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="flex">
-      <div className="flex-1 p-6">
-        <div className="bg-white p-8 rounded-lg shadow-md mt-6 text-center">
-          <h2 className="text-3xl font-semibold text-gray-800">Are you sure you want to log out?</h2>
-          <p className="text-lg text-gray-600 mt-4">You will be redirected to the login page.</p>
-
-          <div className="mt-6 space-x-4">
-            <button
-              onClick={handleLogout}
-              className="px-6 py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition duration-300"
-            >
-              Log Out
-            </button>
-            <button
-              onClick={() => navigate('/admin/dashboard')}
-              className="px-6 py-3 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition duration-300"
-            >
-              Cancel
-            </button>
-          </div>
+    <>
+      <Modal isOpen={showModal}>
+        <h2 className="text-xl font-bold mb-4 text-gray-800">Confirm Logout</h2>
+        <p className="mb-6 text-gray-600">Are you sure you want to log out?</p>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={handleConfirm}
+            className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Log Out
+          </button>
+          <button
+            onClick={handleCancel}
+            className="px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
         </div>
-      </div>
-    </div>
+      </Modal>
+    </>
   );
 };
 

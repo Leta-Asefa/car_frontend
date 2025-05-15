@@ -11,6 +11,7 @@ import { PiVan } from "react-icons/pi";
 import { GiOldWagon } from "react-icons/gi";
 import AdvancedFilters from "./filters/AdvancedFilters";
 import Modal from "./common/Modal"; // Ensure Modal is imported
+import { FaHistory } from "react-icons/fa";
 
 const Category = ({ setFilterType, filterType }) => {
   const [selectedCar, setSelectedCar] = useState(null);
@@ -40,7 +41,7 @@ const Category = ({ setFilterType, filterType }) => {
     safety: []
   });
   const [isInitialRender, setIsInitialRender] = useState(true);
-
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   const totalPages = Math.ceil(searchResults.length / itemsPerPage);
 
@@ -168,7 +169,7 @@ const Category = ({ setFilterType, filterType }) => {
 
   useEffect(() => {
     handleApplyFilters(); // Call handleApplyFilters whenever advanced filters change
-  }, [filters.bodyType, filters.brand, filters.model, filters.priceRange, filters.vehicleDetails, filters.transmission, filters.fuelType, filters.features, filters.safety]);
+  }, [filters.bodyType,filters.vehicleDetails, filters.transmission, filters.fuelType, filters.features, filters.safety]);
 
   const handleCategoryClick = (category) => {
     handleFilterChange(category.filterKey, category.type === 'Any' ? '' : category.type);
@@ -241,27 +242,47 @@ const Category = ({ setFilterType, filterType }) => {
       </h2>
 
       {user && searchHistory.length > 0 && (
-        <div className="bg-white p-2 rounded-xl shadow-lg my-4  mx-auto">
-          <h2 className="text-xl font-bold mb-2 text-gray-800 text-center">Your Search History</h2>
-
-          <div className="flex flex-wrap gap-2 justify-center">
-            {searchHistory.map((entry, index) => (
-              <div
-                key={index}
-                className="bg-gray-200 hover:bg-gray-300 rounded-full px-3 py-1 text-gray-800 text-sm shadow hover:shadow-md transition whitespace-nowrap"
-                onClick={() => {
-                  setSelectedCar(entry.carId);
-                  setIsModalOpen(true);
-                }}
-              >
-                {entry.brand} {entry.model}
-              </div>
-            ))}
-          </div>
-
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setShowHistoryModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow hover:bg-gray-100 transition"
+            title="View Search History"
+          >
+            <FaHistory className="text-blue-600 text-xl" />
+          </button>
         </div>
       )}
 
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 min-w-[320px] text-center">
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center justify-center gap-2">
+              <FaHistory className="text-blue-600" /> Your Search History
+            </h2>
+            <div className="flex flex-wrap gap-2 justify-center mb-6">
+              {searchHistory.map((entry, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-200 hover:bg-gray-300 rounded-full px-3 py-1 text-gray-800 text-sm shadow hover:shadow-md transition whitespace-nowrap cursor-pointer"
+                  onClick={() => {
+                    setSelectedCar(entry.carId);
+                    setIsModalOpen(true);
+                    setShowHistoryModal(false);
+                  }}
+                >
+                  {entry.brand} {entry.model}
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowHistoryModal(false)}
+              className="px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Categories */}
       <div className="flex flex-wrap flex-row justify-center items-center gap-5">

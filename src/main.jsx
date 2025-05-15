@@ -21,7 +21,8 @@ import MyListing from "./components/MyListing.jsx";
 import { SocketContextProvider } from "./context/SocketContext.jsx";
 import Message from "./components/Message.jsx";
 import ManageUsers from "./admin/ManageUsers/ManageUsers.jsx";
-import Report from "./admin/Report/Report.jsx";
+import Layout from "./admin/ManageCars/Layout.jsx";
+import AdminLayout from "./admin/AdminLayout.jsx";
 // import ManageUsers from "./admin/ManageUsers/ManageUsers.jsx";
 
 const router = createBrowserRouter([
@@ -58,30 +59,18 @@ const router = createBrowserRouter([
     element: <Message />,
   },
   {
-    path: "/admin/dashboard",
-    element: <Dashboard />,
-  },
-  {
-    path: "/admin/cars",
-    element: <ManageCars />,
-  },
-  {
-    path: "/admin/logout",
-    element: <Logout/>
+    path: "/admin",
+    element: <AdminLayout />, // This renders Sidebar and <Outlet />
+    children: [
+      { path: "dashboard", element: <Dashboard /> },
+      { path: "cars", element: <ManageCars /> },
+      { path: "users", element: <ManageUsers /> },
+      { path: "logout", element: <Logout /> },
+    ]
   },
   {
     path: "/mylistings",
     element:<MyListing/>,
-  }
-  ,
-  {
-    path: "/admin/users",
-    element:<ManageUsers/>,
-  }
-  ,
-  {
-    path: "/admin/reports",
-    element:<Report/>,
   }
 ]);
 

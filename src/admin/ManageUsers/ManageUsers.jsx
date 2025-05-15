@@ -3,10 +3,12 @@ import axios from "axios";
 import Layout from "./Layout";
 import { FaUser, FaEnvelope, FaCheck, FaTimes, FaUserShield, FaPhone, FaDotCircle } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
+import { useLocation } from "react-router-dom";
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
-  const [tab, setTab] = useState("unapproved");
+  const location = useLocation();
+  const [tab, setTab] = useState(location.state?.tab || "unapproved");
   const [selectedUser, setSelectedUser] = useState(null);
   const [search, setSearch] = useState("");
 
@@ -104,17 +106,17 @@ const ManageUsers = () => {
   );
 
   return (
-    <Layout>
+    <div>
       <div className="p-6 ">
         <h1 className="text-2xl font-bold mb-4">Manage Users</h1>
 
         {/* Tabs */}
         <div className="flex gap-4 mb-4 border-b">
           {[
-            { key: "unapproved", label: "Unapproved Users" },
-            { key: "approved", label: "Approved Users" },
-            { key: "suspended", label: "Suspended Users" },
             { key: "all", label: "All Users" },
+            { key: "approved", label: "Approved Users" },
+            { key: "unapproved", label: "Unapproved Users" },
+            { key: "suspended", label: "Suspended Users" },
           ].map((t) => (
             <button
               key={t.key}
@@ -141,10 +143,10 @@ const ManageUsers = () => {
           <table className="min-w-full bg-white">
             <thead className="bg-gray-200 text-gray-600 text-sm uppercase text-left sticky top-0 z-10">
               <tr>
-                <th className="py-3 px-4">Username</th>
-                <th className="py-3 px-4">Email</th>
-                <th className="py-3 px-4">Role</th>
-                <th className="py-3 px-4">Phone Number</th>
+                <th className="py-3 px-4 w-1/4">Username</th>
+                <th className="py-3 px-4 w-1/4">Email</th>
+                <th className="py-3 px-4 w-1/4">Role</th>
+                <th className="py-3 px-4 w-1/4">Phone Number</th>
               </tr>
             </thead>
           </table>
@@ -158,10 +160,10 @@ const ManageUsers = () => {
                     className="border-b hover:bg-gray-50 cursor-pointer"
                     onClick={() => setSelectedUser(user)}
                   >
-                    <td className="py-2 px-4">{user.username}</td>
-                    <td className="py-2 px-4">{user.email}</td>
-                    <td className="py-2 px-4 capitalize">{user.role}</td>
-                    <td className="py-2 px-4 capitalize">{user.phoneNumber}</td>
+                    <td className="py-2 px-4 w-1/4">{user.username}</td>
+                    <td className="py-2 px-4 w-1/4">{user.email}</td>
+                    <td className="py-2 px-4 w-1/4 capitalize">{user.role}</td>
+                    <td className="py-2 px-4 w-1/4 capitalize">{user.phoneNumber}</td>
                   </tr>
                 ))}
                 {filteredUsers.length === 0 && (
@@ -303,7 +305,7 @@ const ManageUsers = () => {
           </div>
         </div>
       )}
-    </Layout>
+ </div>
   );
 };
 
