@@ -61,6 +61,11 @@ const CarManager = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [carIdToDelete, setCarIdToDelete] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const fetchCars = async () => {
@@ -97,6 +102,7 @@ const CarManager = () => {
 
   const handleUpdate = async () => {
     try {
+      setIsUploading(true);
       setIsLoading(true);
 
       const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dpavrc7wd/image/upload";
@@ -123,30 +129,46 @@ const CarManager = () => {
 
       const updatedCar = { ...formData, images: uploadedImageUrls };
       await axios.put(`http://localhost:4000/api/car/${selectedCar._id}`, updatedCar);
-      alert("Car updated successfully!");
+      setSuccessMessage("Car updated successfully!");
+      setShowSuccessModal(true);
       setCars((prevCars) =>
         prevCars.map((car) => (car._id === selectedCar._id ? updatedCar : car))
       );
       setIsModalOpen(false);
+      setTimeout(() => setShowSuccessModal(false), 3000);
     } catch (error) {
       console.error("Error updating car:", error);
       alert("Error updating car!");
     } finally {
       setIsLoading(false);
+      setIsUploading(false);
     }
   };
 
-  const handleDelete = async (carId) => {
-    if (!window.confirm("Are you sure you want to delete this car?")) return;
+  const handleDelete = (carId) => {
+    setCarIdToDelete(carId);
+    setShowDeleteModal(true);
+  };
 
+  const confirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:4000/api/car/${carId}`);
-      alert("Car deleted successfully!");
-      setCars((prevCars) => prevCars.filter((car) => car._id !== carId));
+      await axios.delete(`http://localhost:4000/api/car/${carIdToDelete}`);
+      setSuccessMessage("Car deleted successfully!");
+      setShowSuccessModal(true);
+      setCars((prevCars) => prevCars.filter((car) => car._id !== carIdToDelete));
+      setTimeout(() => setShowSuccessModal(false), 3000);
     } catch (error) {
       console.error("Error deleting car:", error);
       alert("Error deleting car!");
+    } finally {
+      setShowDeleteModal(false);
+      setCarIdToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setCarIdToDelete(null);
   };
 
   const handleChange = (e) => {
@@ -360,6 +382,44 @@ const CarManager = () => {
             </div>
           </div>
         </Modal>
+      )}
+      {isUploading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 min-w-[320px] text-center">
+            <h2 className="text-2xl font-bold mb-2 text-blue-600">Uploading...</h2>
+            <p className="text-lg text-gray-700">Please wait while your car is being saved.</p>
+          </div>
+        </div>
+      )}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 min-w-[320px] text-center">
+            <h2 className="text-2xl font-bold mb-2 text-green-600">Success</h2>
+            <p className="text-lg text-gray-700">{successMessage}</p>
+          </div>
+        </div>
+      )}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 min-w-[320px] text-center">
+            <h2 className="text-2xl font-bold mb-2 text-red-600">Delete Car</h2>
+            <p className="text-lg text-gray-700 mb-6">Are you sure you want to delete this car?</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={confirmDelete}
+                className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+              <button
+                onClick={cancelDelete}
+                className="px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

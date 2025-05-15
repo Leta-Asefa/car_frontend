@@ -276,7 +276,7 @@ const Category = ({ setFilterType, filterType }) => {
             </div>
             <button
               onClick={() => setShowHistoryModal(false)}
-              className="px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              className="px-6 py-2 bg-red-600 text-gray-50 rounded hover:bg-red-400"
             >
               Close
             </button>
