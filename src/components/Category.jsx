@@ -12,11 +12,12 @@ import { GiOldWagon } from "react-icons/gi";
 import AdvancedFilters from "./filters/AdvancedFilters";
 import Modal from "./common/Modal"; // Ensure Modal is imported
 import { FaHistory } from "react-icons/fa";
+import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 
 const Category = ({ setFilterType, filterType }) => {
   const [selectedCar, setSelectedCar] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user, searchResults, setSearchResults } = useAuth()
+  const { user,setUser, searchResults, setSearchResults } = useAuth()
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
@@ -42,6 +43,7 @@ const Category = ({ setFilterType, filterType }) => {
   });
   const [isInitialRender, setIsInitialRender] = useState(true);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const currentYear = new Date().getFullYear();
 
   const totalPages = Math.ceil(searchResults.length / itemsPerPage);
 
@@ -229,6 +231,44 @@ const Category = ({ setFilterType, filterType }) => {
     }, 300); // Delay to ensure smooth transition
   };
 
+  const getStatusBadge = (vehicleDetails, year) => {
+    let badgeClass = "";
+    let label = "";
+    if (vehicleDetails?.toLowerCase().includes("new")) {
+      badgeClass = "bg-green-100 text-green-800";
+      label = "New";
+    } else if (vehicleDetails?.toLowerCase().includes("used")) {
+      badgeClass = "bg-gray-100 text-gray-800";
+      label = "Used";
+    } else if (year == currentYear) {
+      badgeClass = "bg-blue-100 text-blue-800";
+      label = "Recent";
+    } else {
+      badgeClass = "bg-blue-100 text-blue-800";
+      label = vehicleDetails || "Available";
+    }
+    return (
+      <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${badgeClass}`}>{label}</span>
+    );
+  };
+
+
+const handleToggleFavorite = async (carId, e) => {
+  if (e) e.stopPropagation();
+  if (!user) return;
+  try {
+    await axios.post(`http://localhost:4000/api/auth/${user._id}/wishlist`, { carId });
+    setUser(prev => ({
+      ...prev,
+      wishList: prev.wishList?.includes(carId)
+        ? prev.wishList?.filter(id => id !== carId)
+        : [...prev.wishList, carId]
+    }));
+  } catch (error) {
+    console.error('Failed to update wishlist:', error);
+  }
+};
+
   return (
     <div
       className="py-12"
@@ -414,8 +454,25 @@ const Category = ({ setFilterType, filterType }) => {
                   className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 cursor-pointer group relative"
                   onClick={(e) => handleCarCardClick(car, e)}
                 >
+                  {/* Favorite Button */}
+                {
+                  user && (
+                 <div
+                    className="absolute top-4 left-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-red-100 transition-all duration-300 cursor-pointer"
+                    onClick={e => handleToggleFavorite(car._id, e)}
+                  >
+                    {user?.wishList?.includes(car._id) ? (
+                      <AiFillHeart className="text-red-500 text-xl" />
+                    ) : (
+                      <AiOutlineHeart className="text-gray-500 text-xl" />
+                    )}
+                  </div>
 
+                  )
 
+                } 
+                  {/* Status Badge */}
+                  {getStatusBadge(car.vehicleDetails, car.year)}
                   <img
                     src={car.images?.[0]}
                     alt={`${car.brand} ${car.model}`}
@@ -448,7 +505,7 @@ const Category = ({ setFilterType, filterType }) => {
                       </span>
                       <h3
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent triggering handleCarClick
+                          e.stopPropagation(); // Prevent triggering handleCarCardClick
                           handleCarCardClick(car, e);
                         }}
                         className="text-md bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-md flex items-center gap-1"
@@ -503,12 +560,14 @@ const Category = ({ setFilterType, filterType }) => {
                 <h2 className="text-2xl font-bold text-gray-900">
                   {selectedCar.title}
                 </h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-red-700"
-                >
-                  ✕
-                </button>
+                <div className="flex items-center gap-2">
+                 <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-400 hover:text-red-700 ml-2"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -577,7 +636,6 @@ const Category = ({ setFilterType, filterType }) => {
                     </ul>
                   </div>
 
-
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-2">Safety</h3>
                     <ul className="grid grid-cols-2 gap-6">
@@ -589,7 +647,6 @@ const Category = ({ setFilterType, filterType }) => {
                       ))}
                     </ul>
                   </div>
-
                 </div>
 
                 {/* Right Column - Details */}
