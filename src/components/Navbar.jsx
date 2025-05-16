@@ -67,7 +67,7 @@ const Navbar = ({ children }) => {
   }, [query]);
 
   return (
-    <header className="bg-white shadow-md fixed top-0 left-0 w-full z-10">
+    <header className="bg-white shadow-md fixed top-0 left-0 w-full z-50">
       <div className="mx-auto flex justify-between items-center px-2 py-4 text-xs">
         {/* Logo */}
         <div className="flex gap-2 text-2xl font-bold text-blue-600">

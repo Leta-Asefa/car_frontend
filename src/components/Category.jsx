@@ -2,22 +2,20 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
-import { FaCar, FaMapMarkerAlt, FaMoneyBillWave, FaCommentDots } from "react-icons/fa";
-import { Calendar, Car, Gauge, MapPin, ChevronLeft, ChevronRight, Phone, MessageCircle, CarFront, CarTaxiFrontIcon, CarIcon, Truck, SlidersHorizontal, Check } from "lucide-react";
+import { FaCar, FaHistory } from "react-icons/fa";
+import { Calendar, CarFront, CarTaxiFrontIcon, CarIcon, Truck, SlidersHorizontal, Check, Gauge, MapPin, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 import { MdOpenInNew } from "react-icons/md";
 import { HiOutlineSearchCircle } from "react-icons/hi";
-import { FaCarBattery } from "react-icons/fa6";
 import { PiVan } from "react-icons/pi";
-import { GiOldWagon } from "react-icons/gi";
 import AdvancedFilters from "./filters/AdvancedFilters";
-import Modal from "./common/Modal"; // Ensure Modal is imported
-import { FaHistory } from "react-icons/fa";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
+import WishlistButton from "./WishlistButton";
+import WishlistModal from "./WishlistModal";
 
 const Category = ({ setFilterType, filterType }) => {
   const [selectedCar, setSelectedCar] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user,setUser, searchResults, setSearchResults } = useAuth()
+  const { user, setUser, searchResults, setSearchResults } = useAuth();
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
@@ -45,15 +43,15 @@ const Category = ({ setFilterType, filterType }) => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const currentYear = new Date().getFullYear();
 
+  // Wishlist modal state
+  const [showWishlistModal, setShowWishlistModal] = useState(false);
+  const [wishlistCars, setWishlistCars] = useState([]);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
   const totalPages = Math.ceil(searchResults.length / itemsPerPage);
 
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   const paginatedCars = searchResults.slice(
     (currentPage - 1) * itemsPerPage,
@@ -65,15 +63,12 @@ const Category = ({ setFilterType, filterType }) => {
       if (isModalOpen && selectedCar?.user?._id) {
         try {
           const res = await axios.get(`http://localhost:4000/api/car/recommendations/${user._id}`);
-          console.log("Recommendations: ", res.data);
           setRecommendations(res.data);
-        } catch (err) {
-          console.error("Error fetching recommendations:", err);
+        } catch {
           setRecommendations([]);
         }
       }
     };
-
     fetchRecommendations();
   }, [isModalOpen, selectedCar]);
 
@@ -82,15 +77,12 @@ const Category = ({ setFilterType, filterType }) => {
       if (isModalOpen && selectedCar?.user?._id) {
         try {
           const res = await axios.get(`http://localhost:4000/api/car/get_other_posts/${selectedCar.user._id}`);
-          console.log("Other Posts: ", res.data);
           setOtherPosts(res.data);
-        } catch (err) {
-          console.error("Error fetching other posts:", err);
+        } catch {
           setOtherPosts([]);
         }
       }
     };
-
     fetchOtherPosts();
   }, [isModalOpen, selectedCar]);
 
@@ -99,22 +91,17 @@ const Category = ({ setFilterType, filterType }) => {
       if (user && user._id) {
         try {
           const response = await axios.get(`http://localhost:4000/api/auth/${user._id}/search_history`);
-          console.log("Search History: ", response.data);
           setSearchHistory(response.data);
-        } catch (error) {
-          console.error("Error fetching search history:", error);
-        }
+        } catch {}
       }
     };
-
     fetchSearchHistory();
   }, [user]);
-
 
   const priceRanges = {
     "Under 20000": { min: 0, max: 20000 },
     "20000 - 30000": { min: 20000, max: 30000 },
-    "30000 - 40000": { min: 30000, max: 40000 },
+    "30000 - 40000": { min: 0, max: 40000 },
     "40000+": { min: 40000, max: 100000000 },
   };
 
@@ -122,15 +109,11 @@ const Category = ({ setFilterType, filterType }) => {
     const fetchCars = async () => {
       try {
         const response = await axios.get("http://localhost:4000/api/car/latestcars");
-        console.log("latest cars: ", response.data);
         setSearchResults(response.data);
-      } catch (error) {
-        console.error("Error fetching filtered cars:", error);
-      }
+      } catch {}
     };
-    fetchCars()
-  }, [])
-
+    fetchCars();
+  }, []);
 
   const handleFilterChange = (key, value) => {
     setFilters((prevFilters) => ({
@@ -140,23 +123,15 @@ const Category = ({ setFilterType, filterType }) => {
   };
 
   const handleApplyFilters = async () => {
-    console.log("Applied Filters:", filters);
-
     if (isInitialRender) {
       setIsInitialRender(false);
       return;
     }
-
     try {
       const response = await axios.post("http://localhost:4000/api/car/filter", filters);
       setSearchResults(response.data);
-
-      // Reset to the first page when filters are applied
       setCurrentPage(1);
-    } catch (error) {
-      console.error("Error fetching filtered cars:", error);
-    }
-
+    } catch {}
     const availableCarsSection = document.getElementById("available-cars");
     if (availableCarsSection) {
       availableCarsSection.scrollIntoView({ behavior: "smooth" });
@@ -164,27 +139,51 @@ const Category = ({ setFilterType, filterType }) => {
   };
 
   useEffect(() => {
-    if (filters.bodyType || filters.bodyType==='') {
-      handleApplyFilters(); // Trigger fetching cars when the bodyType filter changes
+    if (filters.bodyType || filters.bodyType === '') {
+      handleApplyFilters();
     }
   }, [filters.bodyType]);
 
   useEffect(() => {
-    handleApplyFilters(); // Call handleApplyFilters whenever advanced filters change
-  }, [filters.bodyType,filters.vehicleDetails, filters.transmission, filters.fuelType, filters.features, filters.safety]);
+    handleApplyFilters();
+  }, [filters.bodyType, filters.vehicleDetails, filters.transmission, filters.fuelType, filters.features, filters.safety]);
 
-  const handleCategoryClick = (category) => {
-    handleFilterChange(category.filterKey, category.type === 'Any' ? '' : category.type);
-    setSelectedMake("");
-    setSelectedModel("");
-    setSelectedPrice("");
+  const handleCategoryClick = async (category) => {
+    if (category.type === "Any") {
+      // Clear all filters
+      setFilters({
+        bodyType: "",
+        brand: "",
+        model: "",
+        priceRange: null,
+        vehicleDetails: "",
+        transmission: "",
+        fuelType: "",
+        features: [],
+        safety: []
+      });
+      setSelectedMake("");
+      setSelectedModel("");
+      setSelectedPrice("");
+      // Fetch all latest cars
+      try {
+        const response = await axios.get("http://localhost:4000/api/car/latestcars");
+        setSearchResults(response.data);
+        setCurrentPage(1);
+      } catch {}
+    } else {
+      handleFilterChange(category.filterKey, category.type);
+      setSelectedMake("");
+      setSelectedModel("");
+      setSelectedPrice("");
+    }
   };
 
   const handleCarCardClick = async (car, event) => {
-    event.preventDefault(); // Prevent default behavior
+    event.preventDefault();
     setSelectedCar(car);
+    setSelectedImageIndex(0);
     setIsModalOpen(true);
-    console.log(car);
     if (user && user._id) {
       try {
         await axios.post(`http://localhost:4000/api/auth/${user._id}/search_history`, {
@@ -196,39 +195,34 @@ const Category = ({ setFilterType, filterType }) => {
           carId: car._id,
           date: new Date()
         });
-      } catch (error) {
-        console.error("Failed to save search history:", error);
-      }
+      } catch {}
     }
   };
 
   const handleApplyAdvancedFilters = (advancedFilters) => {
-    console.log("Applied Advanced Filters:", advancedFilters);
-
     setFilters((prevFilters) => ({
       ...prevFilters,
-      ...advancedFilters, // Merge advanced filters into the main filters state
+      ...advancedFilters,
     }));
-
-    handleApplyFilters(); // Apply the combined filters
+    handleApplyFilters();
   };
 
   const handleRecommendationClick = (car) => {
     setSelectedCar(car);
-    setSelectedImageIndex(0); // Reset image index
+    setSelectedImageIndex(0);
     const modalElement = document.querySelector('.modal-content');
     if (modalElement) {
-      modalElement.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll modal to the top
+      modalElement.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleOtherPostClick = (car) => {
-    setIsModalOpen(false); // Close the current modal
+    setIsModalOpen(false);
     setTimeout(() => {
-      setSelectedCar(car); // Set the new car
-      setSelectedImageIndex(0); // Reset image index
-      setIsModalOpen(true); // Reopen the modal with the new car
-    }, 300); // Delay to ensure smooth transition
+      setSelectedCar(car);
+      setSelectedImageIndex(0);
+      setIsModalOpen(true);
+    }, 300);
   };
 
   const getStatusBadge = (vehicleDetails, year) => {
@@ -252,22 +246,55 @@ const Category = ({ setFilterType, filterType }) => {
     );
   };
 
+  // --- Wishlist logic ---
+  const fetchWishlist = async () => {
+    if (!user) return;
+    setWishlistLoading(true);
+    try {
+      const res = await axios.get(`http://localhost:4000/api/auth/${user._id}/wishlist`);
+      setWishlistCars(res.data || []);
+    } catch {
+      setWishlistCars([]);
+    }
+    setWishlistLoading(false);
+  };
 
-const handleToggleFavorite = async (carId, e) => {
-  if (e) e.stopPropagation();
-  if (!user) return;
-  try {
-    await axios.post(`http://localhost:4000/api/auth/${user._id}/wishlist`, { carId });
-    setUser(prev => ({
-      ...prev,
-      wishList: prev.wishList?.includes(carId)
-        ? prev.wishList?.filter(id => id !== carId)
-        : [...prev.wishList, carId]
-    }));
-  } catch (error) {
-    console.error('Failed to update wishlist:', error);
-  }
-};
+  const handleOpenWishlist = async () => {
+    await fetchWishlist();
+    setShowWishlistModal(true);
+  };
+
+  const handleRemoveFromWishlist = async (carId) => {
+    try {
+      await axios.post(`http://localhost:4000/api/auth/${user._id}/wishlist`, { carId });
+      setWishlistCars(prev => prev.filter(car => car._id !== carId));
+      setUser(prev => ({
+        ...prev,
+        wishList: prev.wishList?.filter(id => id !== carId)
+      }));
+    } catch {}
+  };
+
+  const handleWishlistCarClick = (car) => {
+    setSelectedCar(car);
+    setSelectedImageIndex(0);
+    setIsModalOpen(true);
+    setShowWishlistModal(false);
+  };
+
+  const handleToggleFavorite = async (carId, e) => {
+    if (e) e.stopPropagation();
+    if (!user) return;
+    try {
+      await axios.post(`http://localhost:4000/api/auth/${user._id}/wishlist`, { carId });
+      setUser(prev => ({
+        ...prev,
+        wishList: prev.wishList?.includes(carId)
+          ? prev.wishList?.filter(id => id !== carId)
+          : [...prev.wishList, carId]
+      }));
+    } catch {}
+  };
 
   return (
     <div
@@ -281,16 +308,29 @@ const handleToggleFavorite = async (carId, e) => {
         Browse Cars By Body Type
       </h2>
 
-      {user && searchHistory.length > 0 && (
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setShowHistoryModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow hover:bg-gray-100 transition"
-            title="View Search History"
-          >
-            <FaHistory className="text-blue-600 text-xl" />
-          </button>
+      {user?.role==='buyer' && (
+        <div className="flex justify-end mb-4 gap-2">
+          <WishlistButton onClick={handleOpenWishlist} />
+          {searchHistory.length > 0 && (
+            <button
+              onClick={() => setShowHistoryModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow hover:bg-gray-100 transition"
+              title="View Search History"
+            >
+              <FaHistory className="text-blue-600 text-xl" />
+            </button>
+          )}
         </div>
+      )}
+
+      {showWishlistModal && (
+        <WishlistModal
+          wishListCars={wishlistCars}
+          onClose={() => setShowWishlistModal(false)}
+          onRemove={handleRemoveFromWishlist}
+          onCarClick={handleWishlistCarClick}
+          loading={wishlistLoading}
+        />
       )}
 
       {showHistoryModal && (
@@ -349,9 +389,6 @@ const handleToggleFavorite = async (carId, e) => {
         ))}
       </div>
 
-
-
-
       {/* Dropdown Filters */}
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto my-10">
         <div className="flex flex-row justify-between items-end gap-3">
@@ -402,8 +439,6 @@ const handleToggleFavorite = async (carId, e) => {
               ))}
             </select>
           </div>
-
-
           <div className="md:col-span-2 flex-1 px-10 flex items-end">
             <button
               onClick={handleApplyFilters}
@@ -412,7 +447,6 @@ const handleToggleFavorite = async (carId, e) => {
               Search
             </button>
           </div>
-
           <div className="">
             <button
               onClick={() => setIsAdvancedFiltersOpen(true)}
@@ -426,18 +460,11 @@ const handleToggleFavorite = async (carId, e) => {
             onClose={() => setIsAdvancedFiltersOpen(false)}
             onApplyFilters={handleApplyAdvancedFilters}
           />
-
         </div>
-
-
       </div>
 
-
-
-
-
       {/* Filter Results */}
-      <div id="available-cars"  className="bg-gray-100 py-10 lg:px-32 px-12  rounded-xl">
+      <div id="available-cars" className="bg-gray-100 py-10 lg:px-32 px-12  rounded-xl">
         <h2 className="text-3xl font-bold text-black mb-8 text-center">Available Cars</h2>
         {searchResults.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-md">
@@ -455,22 +482,18 @@ const handleToggleFavorite = async (carId, e) => {
                   onClick={(e) => handleCarCardClick(car, e)}
                 >
                   {/* Favorite Button */}
-                {
-                  user && (
-                 <div
-                    className="absolute top-4 left-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-red-100 transition-all duration-300 cursor-pointer"
-                    onClick={e => handleToggleFavorite(car._id, e)}
-                  >
-                    {user?.wishList?.includes(car._id) ? (
-                      <AiFillHeart className="text-red-500 text-xl" />
-                    ) : (
-                      <AiOutlineHeart className="text-gray-500 text-xl" />
-                    )}
-                  </div>
-
-                  )
-
-                } 
+                  {user?.role==='buyer' && (
+                    <div
+                      className="absolute top-4 left-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-red-100 transition-all duration-300 cursor-pointer"
+                      onClick={e => handleToggleFavorite(car._id, e)}
+                    >
+                      {user?.wishList?.includes(car._id) ? (
+                        <AiFillHeart className="text-red-500 text-xl" />
+                      ) : (
+                        <AiOutlineHeart className="text-gray-500 text-xl" />
+                      )}
+                    </div>
+                  )}
                   {/* Status Badge */}
                   {getStatusBadge(car.vehicleDetails, car.year)}
                   <img
@@ -505,7 +528,7 @@ const handleToggleFavorite = async (carId, e) => {
                       </span>
                       <h3
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent triggering handleCarCardClick
+                          e.stopPropagation();
                           handleCarCardClick(car, e);
                         }}
                         className="text-md bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-md flex items-center gap-1"
@@ -547,11 +570,11 @@ const handleToggleFavorite = async (carId, e) => {
 
       {/* Car Details Modal */}
       {isModalOpen && selectedCar && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 transition-all duration-7000 ease-in-out" 
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 transition-all duration-7000 ease-in-out"
           style={{ opacity: isModalOpen ? 1 : 0, visibility: isModalOpen ? 'visible' : 'hidden' }}
         >
-          <div 
+          <div
             className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-7000 ease-in-out"
             style={{ transform: isModalOpen ? 'translateY(0)' : 'translateY(-20px)', opacity: isModalOpen ? 1 : 0 }}
           >
@@ -561,7 +584,7 @@ const handleToggleFavorite = async (carId, e) => {
                   {selectedCar.title}
                 </h2>
                 <div className="flex items-center gap-2">
-                 <button
+                  <button
                     onClick={() => setIsModalOpen(false)}
                     className="text-gray-400 hover:text-red-700 ml-2"
                   >
@@ -569,7 +592,6 @@ const handleToggleFavorite = async (carId, e) => {
                   </button>
                 </div>
               </div>
-
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Left Column - Images */}
                 <div>
@@ -602,7 +624,6 @@ const handleToggleFavorite = async (carId, e) => {
                       ❯
                     </button>
                   </div>
-
                   <div className="flex mt-4 gap-2">
                     {selectedCar.images.map((image, index) => (
                       <img
@@ -618,12 +639,10 @@ const handleToggleFavorite = async (carId, e) => {
                       />
                     ))}
                   </div>
-
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-2">Description</h3>
                     <p className="text-gray-600">{selectedCar.description}</p>
                   </div>
-
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-2">Features</h3>
                     <ul className="grid grid-cols-2 gap-6">
@@ -635,7 +654,6 @@ const handleToggleFavorite = async (carId, e) => {
                       ))}
                     </ul>
                   </div>
-
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-2">Safety</h3>
                     <ul className="grid grid-cols-2 gap-6">
@@ -648,7 +666,6 @@ const handleToggleFavorite = async (carId, e) => {
                     </ul>
                   </div>
                 </div>
-
                 {/* Right Column - Details */}
                 <div className="space-y-6">
                   <div className="bg-gray-50 py-6 px-5 rounded-lg">
@@ -658,7 +675,7 @@ const handleToggleFavorite = async (carId, e) => {
                     <button
                       className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center mt-4"
                       onClick={async (e) => {
-                        e.stopPropagation(); // prevent triggering handleCarClick
+                        e.stopPropagation();
                         if (!user) {
                           setShowLoginModal(true);
                         } else {
@@ -667,8 +684,7 @@ const handleToggleFavorite = async (carId, e) => {
                               `http://localhost:4000/api/chat/create_conversations/${user._id}/${selectedCar.user._id}`
                             );
                             navigate(`/messages/${selectedCar.user._id}`);
-                          } catch (error) {
-                            console.error("Failed to start chat:", error);
+                          } catch {
                             alert("Could not create chat.");
                           }
                         }
@@ -683,9 +699,7 @@ const handleToggleFavorite = async (carId, e) => {
                           <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold text-gray-900">Login Required</h2>
                             <button
-                              onClick={() => {
-                                setShowLoginModal(false);
-                              }}
+                              onClick={() => setShowLoginModal(false)}
                               className="text-gray-400 hover:text-red-700"
                             >
                               ✕
@@ -694,7 +708,6 @@ const handleToggleFavorite = async (carId, e) => {
                           <p className="text-gray-600 mb-4">
                             You can not send messages while your are logged out.
                           </p>
-
                         </div>
                       </div>
                     )}
@@ -715,7 +728,6 @@ const handleToggleFavorite = async (carId, e) => {
                       ))}
                     </div>
                   </div>
-
                   <div className="bg-white border border-gray-200 rounded-lg p-6">
                     <h3 className="text-lg font-semibold mb-4">Specifications</h3>
                     <div className="space-y-4">
@@ -768,7 +780,6 @@ const handleToggleFavorite = async (carId, e) => {
                           {selectedCar.location}
                         </span>
                       </div>
-
                       <div className="flex items-center justify-between">
                         <div className="flex items-center text-gray-600">
                           <MapPin className="h-5 w-5 mr-3 text-gray-400" />
@@ -799,16 +810,8 @@ const handleToggleFavorite = async (carId, e) => {
                       </div>
                     </div>
                   </div>
-
-
-
-
-
                 </div>
-
-
               </div>
-
               {recommendations.length > 0 && (
                 <div className="mt-10">
                   <h3 className="text-xl font-semibold mb-4">You Might Also Like</h3>
@@ -831,7 +834,6 @@ const handleToggleFavorite = async (carId, e) => {
                   </div>
                 </div>
               )}
-
               {otherPosts.length > 0 && (
                 <div className="mt-10">
                   <h3 className="text-xl font-semibold mb-4">Seller's Other Posts</h3>
@@ -854,12 +856,10 @@ const handleToggleFavorite = async (carId, e) => {
                   </div>
                 </div>
               )}
-
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };
