@@ -30,6 +30,7 @@ const Navbar = ({ children }) => {
 
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    
   };
 
   const getLatestCars = async () => {

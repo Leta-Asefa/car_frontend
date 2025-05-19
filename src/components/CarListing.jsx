@@ -4,6 +4,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Modal from "./common/Modal";
+import Footer from "../pages/Footer";
 
 const dropdownData = {
   brand: [
@@ -74,6 +75,9 @@ const CarListing = () => {
   const [errors, setErrors] = useState({});
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const navigate = useNavigate();
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+const [errorMessage, setErrorMessage] = useState("");
+
   const { user } = useAuth();
 
   if (!user) {
@@ -148,8 +152,10 @@ const CarListing = () => {
       }
     } catch (error) {
       console.error("Error submitting car listing:", error);
-      alert("Error while submitting the car listing!");
+      setErrorMessage("Error while submitting the car listing. Please try again.");
+      setIsErrorModalOpen(true);
     }
+    
   };
 
   return (
@@ -214,10 +220,12 @@ const CarListing = () => {
                   )
                 ) : (
                   <input
-                    type="text"
+                    type={`${key==='mileage'|| key==='price'?'number':'text'}`}
                     id={key}
                     name={key}
                     value={formData[key]}
+                    maxLength={key === 'description' ? 200 : undefined}
+                    minLength={key === 'description' ? 20 : undefined}
                     onChange={(e) => handleInputChange(key, e.target.value)}
                     className="w-full p-4 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -282,6 +290,22 @@ const CarListing = () => {
           </div>
         </Modal>
       )}
+     
+     {isErrorModalOpen && (
+  <Modal isOpen={isErrorModalOpen} onClose={() => setIsErrorModalOpen(false)}>
+    <div className="text-center bg-red-100 text-red-900 p-10 rounded-lg">
+      <h2 className="text-2xl font-bold mb-4">Submission Failed</h2>
+      <p className="mb-6">{errorMessage}</p>
+      <button
+        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        onClick={() => setIsErrorModalOpen(false)}
+      >
+        Close
+      </button>
+    </div>
+  </Modal>
+)}
+
     </div>
   );
 };

@@ -7,6 +7,7 @@ import Navbar from "./Navbar";
 import { HiOutlineSearchCircle } from "react-icons/hi";
 import { MdOpenInNew } from "react-icons/md";
 import { Calendar, Gauge, MapPin } from "lucide-react";
+import Footer from "../pages/Footer";
 
 const dropdownData = {
   brand: [
@@ -189,6 +190,7 @@ const CarManager = () => {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gray-100 p-12">
       <Navbar/>
       <h1 className="text-3xl font-bold text-center mb-6 mt-10">Manage Your Car Posts</h1>
@@ -277,6 +279,7 @@ const CarManager = () => {
                 key !== "updatedAt" &&
                 key !== "user" &&
                 key !== "__v" &&
+                key !== "wishList" &&
                 key !== "status" && (
                   <div key={key}>
                     <label className="block text-gray-700 font-semibold capitalize">{key}</label>
@@ -422,6 +425,8 @@ const CarManager = () => {
         </div>
       )}
     </div>
+      <Footer/>
+      </>
   );
 };
 

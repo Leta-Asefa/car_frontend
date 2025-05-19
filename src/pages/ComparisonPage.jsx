@@ -3,6 +3,7 @@ import axios from "axios";
 import { Check, Search } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { FaMoneyBillAlt, FaCarSide, FaCalendarAlt, FaTags, FaPalette, FaGasPump, FaCogs, FaTachometerAlt, FaMapMarkerAlt, FaUser, FaInfoCircle, FaListAlt, FaCheckCircle } from "react-icons/fa";
+import Footer from "./Footer";
 
 export default function ComparisonPage() {
   const [car1, setCar1] = useState(null);
@@ -306,6 +307,7 @@ export default function ComparisonPage() {
           </div>
         </div>
       </div>
+      <Footer/>
     </>
   );
 }

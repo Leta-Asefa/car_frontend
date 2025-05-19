@@ -9,7 +9,13 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
+
 const Footer = () => {
+
+  const handleScrollToTop=()=>{
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   return (
     <footer className="bg-gray-800 text-white py-16">
       <div className="container mx-auto px-6 lg:px-32">
@@ -41,17 +47,17 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li>
+              <li onClick={handleScrollToTop}>
                 <Link to={"/"} className="text-gray-400 hover:text-white">
                   Home
                 </Link>
               </li>
-              <li>
+              <li onClick={handleScrollToTop}>
                 <Link to={"/about"} className="text-gray-400 hover:text-white">
                   About Us
                 </Link>
               </li>
-              <li>
+              <li onClick={handleScrollToTop}>
                 <Link
                   to={"/services"}
                   className="text-gray-400 hover:text-white"
@@ -59,12 +65,12 @@ const Footer = () => {
                   Our Services
                 </Link>
               </li>
-              <li>
+              <li onClick={handleScrollToTop}>
                 <Link to={""} className="text-gray-400 hover:text-white">
                   Cars for Sale
                 </Link>
               </li>
-              <li>
+              <li onClick={handleScrollToTop}>
                 <Link
                   to={"/contact"}
                   className="text-gray-400 hover:text-white"
