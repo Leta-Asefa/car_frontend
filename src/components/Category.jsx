@@ -715,7 +715,7 @@ const Category = ({ setFilterType, filterType }) => {
                       Contact Seller Via
                     </h1>
                     <div className="flex justify-center items-center flex-wrap gap-2">
-                      {(user?.links || [{ name: "Telegram", link: 'https://' }]).map((social, index) => (
+                      {(selectedCar?.user?.socialMedia || [{ name: "Telegram", link: 'https://' }]).map((social, index) => (
                         <a
                           key={index}
                           href={social.link}
