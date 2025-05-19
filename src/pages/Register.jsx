@@ -5,28 +5,30 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(true);
   const { login, register } = useAuth();
   const navigate = useNavigate();
 
-  // State for form fields
+  // Form data state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
-    
+    confirmPassword: '',
+    role: 'user', // Add a default role if needed by register()
   });
 
-  // State for validation errors
+  // Validation error state
   const [errors, setErrors] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
+    confirmPassword: '',
   });
 
-  // Handle input changes
+  // Input handler
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -35,10 +37,16 @@ const Register = () => {
     }));
   };
 
-  // Form validation
+  // Validation function
   const validate = () => {
     let valid = true;
-    const newErrors = { name: '', email: '', phone: '', password: '' };
+    const newErrors = {
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    };
 
     if (isSignUp && !formData.name.trim()) {
       newErrors.name = 'Name is required';
@@ -51,8 +59,8 @@ const Register = () => {
       valid = false;
     }
 
-    if (isSignUp && !/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone number must be 10 digits';
+    if (isSignUp && !/^0[79]\d{8}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone number must start with 09 or 07 and be 10 digits';
       valid = false;
     }
 
@@ -63,7 +71,12 @@ const Register = () => {
       newErrors.password = 'Password must be at least 8 characters';
       valid = false;
     } else if (!/\d/.test(formData.password) || !/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one number and one special character';
+      newErrors.password = 'Password must contain a number and a special character';
+      valid = false;
+    }
+
+    if (isSignUp && formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
       valid = false;
     }
 
@@ -71,27 +84,35 @@ const Register = () => {
     return valid;
   };
 
-  // Handle form submission
+  // Submit handler
   const handleSubmit = async (e) => {
-    e.preventDefault(); // prevent default form behavior
-    if (!validate()) return;
+    e.preventDefault();
+    const isValid = validate();
+    if (!isValid) return;
 
     try {
       if (isSignUp) {
-        await register(formData.email, formData.password, formData.name, formData.role); // Assuming 'user' role
+        await register(formData.email, formData.password, formData.name, formData.role, formData.phone);
       } else {
         await login(formData.email, formData.password);
       }
-      // redirect after success
+
+      navigate('/dashboard'); // Replace with your actual route
     } catch (error) {
       console.error('Authentication error:', error.message);
     }
   };
 
-  // Toggle between Sign Up and Sign In
+  // Toggle between Sign In and Sign Up
   const toggleForm = () => {
     setIsSignUp((prev) => !prev);
-    setErrors({ name: '', email: '', phone: '', password: '' });
+    setErrors({
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    });
   };
 
   return (
@@ -100,10 +121,12 @@ const Register = () => {
       <div className="flex max-w-5xl w-full bg-white p-8 border rounded-lg shadow-lg">
         {/* Left Side (Form) */}
         <div className="w-full lg:w-1/2 space-y-6">
-          <h2 className="text-2xl font-bold text-center mb-6">{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
+          <h2 className="text-2xl font-bold text-center mb-6">
+            {isSignUp ? 'Sign Up' : 'Sign In'}
+          </h2>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Name Field (only for Sign Up) */}
+            {/* Name Field */}
             {isSignUp && (
               <div>
                 <label htmlFor="name" className="block text-sm font-semibold text-gray-700">Full Name</label>
@@ -133,7 +156,7 @@ const Register = () => {
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
 
-            {/* Phone Number Field (only for Sign Up) */}
+            {/* Phone Field */}
             {isSignUp && (
               <div>
                 <label htmlFor="phone" className="block text-sm font-semibold text-gray-700">Phone Number</label>
@@ -163,6 +186,22 @@ const Register = () => {
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
 
+            {/* Confirm Password */}
+            {isSignUp && (
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className={`block w-full px-4 py-2 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md`}
+                />
+                {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+              </div>
+            )}
+
             {/* Submit Button */}
             <div>
               <button
@@ -174,19 +213,19 @@ const Register = () => {
             </div>
           </form>
 
-          {/* Switch between Sign Up and Sign In */}
+          {/* Switch Form Link */}
           <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
               {isSignUp ? (
                 <>
-                  Already have an account?{' '}
+                  Already have an account right?{' '}
                   <button onClick={toggleForm} className="text-blue-600 hover:text-blue-700 font-semibold">
                     Sign In
                   </button>
                 </>
               ) : (
                 <>
-                  Don't have an account?{' '}
+                  Don't have an account right?{' '}
                   <button onClick={toggleForm} className="text-blue-600 hover:text-blue-700 font-semibold">
                     Sign Up
                   </button>
@@ -196,7 +235,7 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Right Side (Image) */}
+        {/* Right Side Image */}
         <div className="hidden lg:block lg:w-1/2 pl-8">
           <img src={services} alt="Services" className="w-full h-full object-cover" />
         </div>

@@ -7,26 +7,57 @@ import { useNavigate } from "react-router-dom";
 const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [role, setRole] = useState("buyer"); // Default to "buyer"
+  const [role, setRole] = useState("buyer");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const { register } = useAuth();
-  const navigator = useNavigate()
+  const navigator = useNavigate();
+
+  const validate = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (!/^0[79]\d{8}$/.test(phoneNumber)) {
+      errors.phoneNumber = "Phone must start with 09 or 07 and be 10 digits.";
+      isValid = false;
+    }
+
+    if (password.length < 8) {
+      errors.password = "Password must be at least 8 characters.";
+      isValid = false;
+    }
+
+    if (password !== confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+      isValid = false;
+    }
+
+    setFieldErrors(errors);
+    return isValid;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
+
+    if (!validate()) return;
+
     try {
-      const status = await register(email, password, name, role,phoneNumber);
+      const status = await register(email, password, name, role, phoneNumber);
       if (status) {
         onClose();
-        console.log("status ", status);
-        navigator('/')
+        navigator("/");
       }
     } catch (err) {
-      console.log(err);
-      setError("Registration failed. Please try again.");
+      console.error("Registration failed error", err);
+
+    const message =
+      err?.response?.data?.message+". email and phone should be unique" || "Registration failed. Please try again.";
+    setError(message);
     }
   };
 
@@ -35,10 +66,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
       <div className="bg-white px-8 py-6 rounded-lg max-w-md w-full">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Register</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
             <X className="h-6 w-6" />
           </button>
         </div>
@@ -49,10 +77,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
               Full Name
             </label>
             <input
@@ -60,15 +85,13 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className=" w-full p-2 mt-2 border focus:outline-none focus:ring-2  block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               required
+              className="w-full p-2 mt-2 border rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
+
           <div>
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
               Phone No
             </label>
             <input
@@ -76,16 +99,18 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="phoneNumber"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className=" w-full p-2 mt-2 border focus:outline-none focus:ring-2  block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               required
+              className={`w-full p-2 mt-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                fieldErrors.phoneNumber ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {fieldErrors.phoneNumber && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.phoneNumber}</p>
+            )}
           </div>
 
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
@@ -93,16 +118,13 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className=" w-full p-2 mt-2 border focus:outline-none focus:ring-2  block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               required
+              className="w-full p-2 mt-2 border rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
@@ -110,15 +132,37 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className=" w-full p-2 mt-2 border focus:outline-none focus:ring-2  block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               required
+              className={`w-full p-2 mt-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                fieldErrors.password ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {fieldErrors.password && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.password}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Account Type
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              Confirm Password
             </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className={`w-full p-2 mt-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                fieldErrors.confirmPassword ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {fieldErrors.confirmPassword && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.confirmPassword}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Account Type</label>
             <div className="mt-2 space-x-4">
               <label className="inline-flex items-center">
                 <input

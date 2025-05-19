@@ -3,6 +3,7 @@ import { mockUsers } from "../Data/mockData";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
+import InfoModal from "../components/InfoModal"; // Add this import at the top if not present
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -13,7 +14,7 @@ export function AuthProvider({ children }) {
   });
 
   const [searchResults,setSearchResults]=useState([])
-
+  const [modal, setModal] = useState({ open: false, message: "" });
 
   const login = async (email, password) => {
     try {
@@ -29,12 +30,12 @@ export function AuthProvider({ children }) {
       console.log("Login succewss", res);
 
       if (res?.data?.status === 'unapproved') {
-        alert("Your account is not approved yet")
-        return false
+        setModal({ open: true, message: "Your account is not approved yet. please wait patietly the approval may take upto 2 days." });
+        return false;
       }
       if (res?.data?.status === 'declined') {
-        alert("Your account is declined by the admin")
-        return false
+        setModal({ open: true, message: "Your account is declined by the admin" });
+        return false;
       }
 
       if (res?.data?._id) {
@@ -76,11 +77,11 @@ export function AuthProvider({ children }) {
 console.log("response from register", res);
 
       if (res?.data?.status === 'unapproved') {
-        alert("Your account is not approved yet")
+        setModal({ open: true, message: "Your account is not approved yet. please wait patietly the approval may take upto 2 days." });
         return false
       }
       if (res?.data?.status === 'declined') {
-        alert("Your account is declined by the admin")
+        setModal({ open: true, message: "Your account is declined by the admin" });
         return false
       }
 
@@ -90,7 +91,7 @@ console.log("response from register", res);
       }
 
     } catch (err) {
-      console.error("Register error:", err);
+      console.error("Register error:", err.response);
       throw err; // Re-throw for caller to handle
     }
   };
@@ -98,6 +99,11 @@ console.log("response from register", res);
   return (
     <AuthContext.Provider value={{ user, setUser, login, logout, register,searchResults,setSearchResults }}>
       {children}
+      <InfoModal
+        open={modal.open}
+        message={modal.message}
+        onClose={() => setModal({ open: false, message: "" })}
+      />
     </AuthContext.Provider>
   );
 }
